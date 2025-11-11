@@ -8,55 +8,7 @@
   </a>
 </div>
 
-<form class="row g-2 mb-4" method="get" action="/admin/orders">
-  <div class="col-md-3">
-    <label class="form-label">Khoảng thời gian</label>
-    <select name="range" class="form-select">
-      <option value="all"       <%= range === 'all' ? 'selected' : '' %>>Tất cả</option>
-      <option value="today"     <%= range === 'today' ? 'selected' : '' %>>Hôm nay</option>
-      <option value="yesterday" <%= range === 'yesterday' ? 'selected' : '' %>>Hôm qua</option>
-      <option value="week"      <%= range === 'week' ? 'selected' : '' %>>Tuần này</option>
-      <option value="month"     <%= range === 'month' ? 'selected' : '' %>>Tháng này</option>
-      <option value="custom"    <%= range === 'custom' ? 'selected' : '' %>>Khoảng thời gian cụ thể</option>
-    </select>
-  </div>
 
-  <div class="col-md-2">
-    <label class="form-label">Từ ngày</label>
-    <input
-      type="date"
-      name="from"
-      class="form-control"
-      value="<%= from || '' %>"
-    >
-  </div>
-
-  <div class="col-md-2">
-    <label class="form-label">Đến ngày</label>
-    <input
-      type="date"
-      name="to"
-      class="form-control"
-      value="<%= to || '' %>"
-    >
-  </div>
-
-  <div class="col-md-2">
-    <label class="form-label">Trạng thái</label>
-    <select name="status" class="form-select">
-      <option value="all"        <%= status === 'all' ? 'selected' : '' %>>Tất cả</option>
-      <option value="Pending"    <%= status === 'Pending' ? 'selected' : '' %>>Đang chờ xử lý</option>
-      <option value="Confirmed"  <%= status === 'Confirmed' ? 'selected' : '' %>>Đã xác nhận</option>
-      <option value="Shipping"   <%= status === 'Shipping' ? 'selected' : '' %>>Đang giao</option>
-      <option value="Delivered"  <%= status === 'Delivered' ? 'selected' : '' %>>Đã giao</option>
-      <option value="Cancelled"  <%= status === 'Cancelled' ? 'selected' : '' %>>Đã hủy</option>
-    </select>
-  </div>
-
-  <div class="col-md-2 align-self-end">
-    <button class="btn btn-primary w-100">Lọc</button>
-  </div>
-</form>
 
 <div class="mb-2 text-muted">
   Tổng <strong><%= totalCount %></strong> đơn hàng.
