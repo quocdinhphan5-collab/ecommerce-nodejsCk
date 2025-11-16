@@ -403,23 +403,3 @@ async function postChangePassword(req, res) {
     });
   }
 }
-
-// ========== EXPORT ==========
-module.exports = {
-  getRegister,
-  postRegister,
-  getLogin,
-  postLogin,
-  logout,
-  getProfile,
-  postProfile,
-  getForgotPassword,
-  postForgotPassword,
-  getOtpPage,
-  postOtp,
-  postResendOtp,
-  getResetPasswordPage,
-  postResetPassword,
-  getChangePassword,
-  postChangePassword,
-};
