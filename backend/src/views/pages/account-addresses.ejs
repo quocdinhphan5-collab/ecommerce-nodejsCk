@@ -106,7 +106,16 @@
                       Lưu thay đổi
                     </button>
 
-                
+                    <form
+                      method="post"
+                      action="/account/addresses/<%= addr._id %>/delete"
+                      class="d-inline"
+                      onsubmit="return confirm('Bạn chắc chắn xóa địa chỉ này?');"
+                    >
+                      <button class="btn btn-sm btn-outline-danger" type="submit">
+                        Xóa
+                      </button>
+                    </form>
                   </div>
                 </form>
 
