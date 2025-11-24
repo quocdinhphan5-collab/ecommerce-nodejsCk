@@ -20,16 +20,7 @@
 <table class="table">
   <thead>
   </thead>
-  <tbody>
-    <% discounts.forEach(d => { %>
-      <tr>
-        <td><%= d.code %></td>
-        <td><%= d.discountValue.toLocaleString('vi-VN') %> ₫</td>
-        <td><%= d.usageCount %> / <%= d.usageLimit %></td>
-        <td><%= d.createdAt.toLocaleString('vi-VN') %></td>
-      </tr>
-    <% }) %>
-  </tbody>
+
 </table>
 
 <%- include('../partials/footer') %>
