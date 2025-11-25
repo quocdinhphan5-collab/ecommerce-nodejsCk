@@ -56,15 +56,7 @@
                         <td class="text-nowrap">
                           <%= it.price.toLocaleString('vi-VN') %> ₫
                         </td>
-                        <td>
-                          <input
-                            type="number"
-                            name="quantities[<%= idx %>]"
-                            class="form-control form-control-sm cart-qty-input"
-                            value="<%= it.quantity %>"
-                            min="0"
-                          >
-                        </td>
+                        
                         <td class="cart-line-total text-nowrap">
                           <%= (it.price * it.quantity).toLocaleString('vi-VN') %> ₫
                         </td>
