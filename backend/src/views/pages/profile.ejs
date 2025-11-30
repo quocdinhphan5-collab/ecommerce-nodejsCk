@@ -1,0 +1,150 @@
+<%- include('../partials/header') %>
+
+<div class="container py-4">
+
+  <h1 class="h4 mb-3 text-primary fw-bold">👤 Hồ sơ cá nhân</h1>
+
+  <% if (typeof message !== 'undefined' && message) { %>
+    <div class="alert alert-success"><%= message %></div>
+  <% } %>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="alert alert-danger"><%= error %></div>
+  <% } %>
+
+  <div class="row g-4">
+    <!-- FORM CẬP NHẬT HỒ SƠ -->
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <div
+              class="rounded-circle d-flex align-items-center justify-content-center me-3"
+              style="
+                width: 56px;
+                height: 56px;
+                background: linear-gradient(135deg, #e0f2fe, #bfdbfe);
+                color: #1d4ed8;
+                font-weight: 700;
+                font-size: 1.4rem;
+              "
+            >
+              <%= (user.fullName || user.email || 'U').trim()[0].toUpperCase() %>
+            </div>
+            <div>
+              <div class="fw-semibold"><%= user.fullName %></div>
+              <div class="text-muted small"><%= user.email %></div>
+            </div>
+          </div>
+
+          <hr class="mb-4">
+
+          <form method="post" action="/profile" class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Họ tên</label>
+              <input
+                type="text"
+                name="fullName"
+                class="form-control"
+                value="<%= user.fullName %>"
+                required
+              >
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Email</label>
+              <input
+                type="email"
+                class="form-control"
+                value="<%= user.email %>"
+                disabled
+              >
+              <div class="form-text">
+                Email dùng để đăng nhập và nhận thông báo đơn hàng.
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Điểm thưởng</label>
+              <input
+                type="text"
+                class="form-control"
+                value="<%= (user.loyaltyPoints || 0).toLocaleString('vi-VN') %> điểm"
+                disabled
+              >
+              <div class="form-text">
+                Điểm thưởng có thể dùng để giảm giá khi thanh toán.
+              </div>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Địa chỉ mặc định</label>
+              <textarea
+                name="address"
+                class="form-control"
+                rows="3"
+                placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"
+              ><%= user.address || '' %></textarea>
+              <div class="form-text">
+                Địa chỉ này sẽ được dùng mặc định khi bạn không chọn địa chỉ giao hàng khác.
+              </div>
+            </div>
+
+            <div class="col-12 mt-2">
+              <button class="btn btn-primary" type="submit">
+                Lưu thay đổi
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- THÔNG TIN TÀI KHOẢN / LIÊN KẾT NHANH -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+          <h2 class="h6 mb-3">Tổng quan tài khoản</h2>
+          <ul class="list-unstyled mb-0 small">
+            <li class="mb-2">
+              <i class="bi bi-envelope"></i>
+              <strong>Email:</strong> <%= user.email %>
+            </li>
+            <li class="mb-2">
+              <i class="bi bi-star-fill text-warning"></i>
+              <strong>Điểm thưởng:</strong>
+              <%= (user.loyaltyPoints || 0).toLocaleString('vi-VN') %> điểm
+            </li>
+            <li class="mb-2">
+              <i class="bi bi-geo-alt"></i>
+              <strong>Địa chỉ mặc định:</strong><br>
+              <span class="text-muted">
+                <%= user.address ? user.address : 'Chưa cập nhật' %>
+              </span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h2 class="h6 mb-3">Liên kết nhanh</h2>
+          <div class="d-grid gap-2">
+            <a href="/orders" class="btn btn-outline-primary btn-sm">
+              📦 Đơn hàng của tôi
+            </a>
+            <a href="/account/addresses" class="btn btn-outline-primary btn-sm">
+              📍 Quản lý địa chỉ giao hàng
+            </a>
+            <a href="/products" class="btn btn-outline-secondary btn-sm">
+              🛒 Tiếp tục mua sắm
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,420 @@
+<%- include('../partials/header') %>
+
+<div class="container py-4">
+
+  <!-- HERO BANNER CHÍNH -->
+  <section class="mb-4">
+    <div
+      class="row align-items-center g-3 rounded-4 p-4 p-md-5"
+      style="
+        background: linear-gradient(135deg, #e0f2fe, #bfdbfe, #d8b4fe);
+        box-shadow: 0 18px 35px rgba(15,23,42,0.18);
+      "
+    >
+      <div class="col-md-7">
+        <h1 class="h3 h-md-2 fw-bold mb-3" style="color: #0f172a;">
+          Nâng cấp góc làm việc của bạn
+        </h1>
+        <p class="mb-3 text-muted">
+          Laptop, PC, màn hình, linh kiện chính hãng – giao nhanh, bảo hành uy tín.
+          Khám phá ưu đãi đặc biệt trong tuần này cùng các thương hiệu lớn.
+        </p>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <a href="/products?special=new" class="btn btn-primary">
+            🔥 Xem sản phẩm mới
+          </a>
+          <a href="/products?special=best" class="btn btn-outline-primary">
+            ⭐ Sản phẩm bán chạy
+          </a>
+        </div>
+        <div class="d-flex flex-wrap gap-3 align-items-center">
+          <div class="small text-muted">
+            <i class="bi bi-truck"></i> Giao hàng toàn quốc
+          </div>
+          <div class="small text-muted">
+            <i class="bi bi-shield-check"></i> Bảo hành chính hãng
+          </div>
+          <div class="small text-muted">
+            <i class="bi bi-credit-card"></i> Trả góp 0% lãi suất
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-5 text-center">
+        <img
+          src="/images/banner.jpg"
+          alt="Khuyến mãi máy tính"
+          class="img-fluid rounded-3 shadow-sm"
+          style="max-height: 260px; object-fit: cover;"
+        >
+      </div>
+    </div>
+  </section>
+
+  <!-- DẢI THƯƠNG HIỆU / LOGO ĐỐI TÁC -->
+  <section class="mb-4">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body py-3">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+          <span class="fw-semibold text-muted">
+            Đối tác & Thương hiệu:
+          </span>
+          <div class="d-flex flex-wrap gap-3 align-items-center">
+            <img src="/images/lenovo.jpeg"    alt="Lenovo"   style="height: 28px; object-fit: contain;">
+            <img src="/images/Dell27inch.jpg" alt="Dell"     style="height: 28px; object-fit: contain;">
+            <img src="/images/samsung.jpeg"   alt="Samsung"  style="height: 28px; object-fit: contain;">
+            <img src="/images/logitech.jpeg"  alt="Logitech" style="height: 28px; object-fit: contain;">
+            <img src="/images/intelcorei9.jpg" alt="Intel"   style="height: 28px; object-fit: contain;">
+            <img src="/images/nvidia RTX5090.jpg" alt="NVIDIA" style="height: 28px; object-fit: contain;">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HÀNG BANNER NHỎ / QUẢNG CÁO THEO DANH MỤC -->
+  <section class="mb-4">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <a href="/products?category=laptop" class="text-decoration-none">
+          <div
+            class="card border-0 h-100"
+            style="background: linear-gradient(135deg, #dbeafe, #eff6ff);"
+          >
+            <div class="card-body d-flex align-items-center">
+              <div>
+                <h6 class="fw-bold mb-1 text-primary">Laptop văn phòng & gaming</h6>
+                <p class="small text-muted mb-0">
+                  Ưu đãi đến 15% cho các dòng laptop Dell, Asus, Lenovo.
+                </p>
+              </div>
+              <img
+                src="/images/acer1.jpg"
+                alt="Laptop"
+                class="ms-auto d-none d-md-block"
+                style="height: 60px; object-fit: contain;"
+              >
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-md-4">
+        <a href="/products?category=monitor" class="text-decoration-none">
+          <div
+            class="card border-0 h-100"
+            style="background: linear-gradient(135deg, #e0f2fe, #f5f3ff);"
+          >
+            <div class="card-body d-flex align-items-center">
+              <div>
+                <h6 class="fw-bold mb-1" style="color:#2563eb;">Màn hình siêu rộng & 2K/4K</h6>
+                <p class="small text-muted mb-0">
+                  Nâng cấp góc làm việc với màn hình LG, Dell, Samsung.
+                </p>
+              </div>
+              <img
+                src="/images/Dell27inch2.jpg"
+                alt="Monitor"
+                class="ms-auto d-none d-md-block"
+                style="height: 60px; object-fit: contain;"
+              >
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-md-4">
+        <a href="/products?category=hdd" class="text-decoration-none">
+          <div
+            class="card border-0 h-100"
+            style="background: linear-gradient(135deg, #ecfeff, #e0f2fe);"
+          >
+            <div class="card-body d-flex align-items-center">
+              <div>
+                <h6 class="fw-bold mb-1" style="color:#0ea5e9;">Ổ cứng & linh kiện</h6>
+                <p class="small text-muted mb-0">
+                  SSD, HDD, RAM, nguồn, card màn hình – build PC theo ý bạn.
+                </p>
+              </div>
+              <img
+                src="/images/ocungsamsung.jpg"
+                alt="Ổ cứng"
+                class="ms-auto d-none d-md-block"
+                style="height: 60px; object-fit: contain;"
+              >
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Thanh tiêu đề + mô tả danh sách -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h2 class="h4 mb-1 text-primary fw-bold">
+        🛒 Danh sách sản phẩm
+      </h2>
+      <p class="text-muted mb-0">
+        Tìm kiếm, lọc và sắp xếp các sản phẩm trong cửa hàng.
+      </p>
+    </div>
+  </div>
+
+  <!-- Khối lọc sản phẩm -->
+  <div class="card shadow-sm mb-4 border-0">
+    <div class="card-body">
+      <form class="row g-2" method="get" action="/products">
+        <div class="col-md-3">
+          <label class="form-label small text-muted mb-1">Từ khóa</label>
+          <input
+            type="text"
+            name="q"
+            class="form-control"
+            placeholder="Tìm kiếm theo tên sản phẩm..."
+            value="<%= query.q || '' %>"
+          >
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label small text-muted mb-1">Danh mục</label>
+          <select name="category" class="form-select">
+            <option value="">Tất cả danh mục</option>
+            <option value="laptop"  <%= query.category==='laptop'  ? 'selected' : '' %>>Laptop</option>
+            <option value="monitor" <%= query.category==='monitor' ? 'selected' : '' %>>Màn hình</option>
+            <option value="hdd"     <%= query.category==='hdd'     ? 'selected' : '' %>>Ổ cứng</option>
+            <option value="pc"      <%= query.category==='pc'      ? 'selected' : '' %>>PC</option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label small text-muted mb-1">Thương hiệu</label>
+          <input
+            type="text"
+            name="brand"
+            class="form-control"
+            placeholder="VD: Dell, Asus..."
+            value="<%= query.brand || '' %>"
+          >
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label small text-muted mb-1">Loại sản phẩm</label>
+          <select name="special" class="form-select">
+            <option value="">Tất cả</option>
+            <option value="new"  <%= query.special === 'new'  ? 'selected' : '' %>>Sản phẩm mới</option>
+            <option value="best" <%= query.special === 'best' ? 'selected' : '' %>>Bán chạy nhất</option>
+          </select>
+        </div>
+
+        <div class="col-md-1">
+          <label class="form-label small text-muted mb-1">Giá min</label>
+          <input
+            type="number"
+            name="price_min"
+            class="form-control"
+            placeholder="Min"
+            value="<%= query.price_min || '' %>"
+          >
+        </div>
+
+        <div class="col-md-1">
+          <label class="form-label small text-muted mb-1">Giá max</label>
+          <input
+            type="number"
+            name="price_max"
+            class="form-control"
+            placeholder="Max"
+            value="<%= query.price_max || '' %>"
+          >
+        </div>
+
+        <div class="col-md-3 mt-2">
+          <label class="form-label small text-muted mb-1">Sắp xếp</label>
+          <select name="sort" class="form-select">
+            <option value="">Mặc định</option>
+            <option value="name_asc"    <%= query.sort==='name_asc'    ? 'selected' : '' %>>Tên A–Z</option>
+            <option value="name_desc"   <%= query.sort==='name_desc'   ? 'selected' : '' %>>Tên Z–A</option>
+            <option value="price_asc"   <%= query.sort==='price_asc'   ? 'selected' : '' %>>Giá tăng dần</option>
+            <option value="price_desc"  <%= query.sort==='price_desc'  ? 'selected' : '' %>>Giá giảm dần</option>
+            <option value="rating_asc"  <%= query.sort==='rating_asc'  ? 'selected' : '' %>>Xếp hạng thấp → cao</option>
+            <option value="rating_desc" <%= query.sort==='rating_desc' ? 'selected' : '' %>>Xếp hạng cao → thấp</option>
+          </select>
+        </div>
+
+        <div class="col-md-2 mt-4 d-flex align-items-end">
+          <button class="btn btn-primary w-100 me-2">
+            Lọc
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Danh sách sản phẩm -->
+  <% if (!items || items.length === 0) { %>
+    <div class="alert alert-warning">
+      Không tìm thấy sản phẩm phù hợp với bộ lọc hiện tại.
+    </div>
+  <% } else { %>
+    <div class="row g-3">
+      <% items.forEach(product => { %>
+        <div class="col-6 col-md-4 col-lg-3">
+          <div class="card h-100 border-0 shadow-sm product-card">
+
+            <!-- Ảnh + badge -->
+            <div class="position-relative">
+              <a href="/product/<%= product._id %>">
+                <img
+                  src="<%= product.images && product.images[0] ? product.images[0] : '/images/placeholder.jpg' %>"
+                  class="card-img-top p-3"
+                  alt="<%= product.name %>"
+                  style="height: 200px; object-fit: contain;"
+                >
+              </a>
+
+              <% if (product.isNew) { %>
+                <span class="badge bg-success position-absolute top-0 start-0 m-2">
+                  Mới
+                </span>
+              <% } %>
+
+              <% if (product.isBestSeller) { %>
+                <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2">
+                  Bán chạy
+                </span>
+              <% } %>
+            </div>
+
+            <!-- Nội dung card -->
+            <div class="card-body d-flex flex-column">
+              <h6 class="card-title mb-1 text-truncate" title="<%= product.name %>">
+                <%= product.name %>
+              </h6>
+
+              <div class="mb-1">
+                <span class="badge bg-light text-muted border me-1">
+                  <i class="bi bi-tag"></i> <%= product.brand || 'Không rõ hãng' %>
+                </span>
+                <span class="badge bg-light text-muted border">
+                  <i class="bi bi-grid"></i> <%= product.category || 'Khác' %>
+                </span>
+              </div>
+
+              <p class="card-text text-danger fw-bold mb-2">
+                <%= product.price.toLocaleString('vi-VN') %> ₫
+              </p>
+
+              <!-- Rating -->
+              <div class="mb-2">
+                <% if (product.numRatings && product.numRatings > 0) { %>
+                  <% const fullStars = Math.round(product.averageRating || 0); %>
+                  <% for (let i = 1; i <= 5; i++) { %>
+                    <% if (i <= fullStars) { %>
+                      <span class="text-warning">★</span>
+                    <% } else { %>
+                      <span class="text-muted">★</span>
+                    <% } %>
+                  <% } %>
+                  <small class="text-muted ms-1">
+                    (<%= product.numRatings %> đánh giá)
+                  </small>
+                <% } else { %>
+                  <small class="text-muted">Chưa có đánh giá</small>
+                <% } %>
+              </div>
+
+              <!-- Nút thêm vào giỏ -->
+              <form method="post" action="/cart/add" class="mt-auto">
+                <input type="hidden" name="productId" value="<%= product._id %>">
+                <input type="hidden" name="quantity" value="1">
+                <button class="btn btn-sm btn-primary w-100">
+                  Thêm vào giỏ
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <!-- Phân trang -->
+  <% if (totalPages && totalPages > 1) { %>
+    <nav class="mt-4 d-flex justify-content-center">
+      <ul class="pagination pagination-sm">
+        <% for (let i = 1; i <= totalPages; i++) { %>
+          <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+            <a
+              class="page-link"
+              href="?<%= Object.entries(query)
+                    .filter(([k]) => k !== 'page' && query[k])
+                    .map(([k, v]) => k + '=' + encodeURIComponent(v))
+                    .join('&') %><%= Object.keys(query).length ? '&' : '' %>page=<%= i %>">
+              <%= i %>
+            </a>
+          </li>
+        <% } %>
+      </ul>
+    </nav>
+  <% } %>
+
+</div>
+  <!-- BANNER CUỐI TRANG – CALL TO ACTION -->
+  <section class="mt-5 mb-4">
+    <div
+      class="row g-3 align-items-center rounded-4 p-4 p-md-5"
+      style="
+        background: radial-gradient(circle at top left, #e0f2fe 0, #bfdbfe 40%, #c4b5fd 100%);
+        box-shadow: 0 16px 32px rgba(15,23,42,0.16);
+      "
+    >
+      <div class="col-md-8">
+        <h2 class="h4 h-md-3 fw-bold mb-2" style="color:#0f172a;">
+          Cần tư vấn cấu hình hoặc chọn sản phẩm phù hợp?
+        </h2>
+        <p class="mb-3 text-muted">
+          Đội ngũ kỹ thuật luôn sẵn sàng hỗ trợ bạn build PC, chọn laptop, màn hình, linh kiện
+          phù hợp với ngân sách và nhu cầu học tập – làm việc – giải trí.
+        </p>
+
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <a href="/products?special=best" class="btn btn-primary">
+            🔥 Xem khuyến mãi & sản phẩm hot
+          </a>
+          <a href="/contact" class="btn btn-outline-primary">
+            💬 Liên hệ tư vấn miễn phí
+          </a>
+        </div>
+
+        <div class="d-flex flex-wrap gap-3 small text-muted">
+          <span><i class="bi bi-telephone"></i> Hotline: <strong>1900 1234</strong> (8:00 – 21:00)</span>
+          <span><i class="bi bi-geo-alt"></i> Showroom: Quận 1, TP. Hồ Chí Minh</span>
+          <span><i class="bi bi-envelope"></i> Email: support@ecommerce.com</span>
+        </div>
+      </div>
+
+      <div class="col-md-4 text-center">
+        <div
+          class="rounded-4 p-3 p-md-4 h-100 d-flex flex-column justify-content-center"
+          style="background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(79,70,229,0.18));"
+        >
+          <p class="small text-uppercase text-muted mb-1">Ưu đãi thành viên</p>
+          <h3 class="h5 fw-bold mb-2" style="color:#1d4ed8;">
+            Giảm thêm 5% cho đơn hàng đầu tiên
+          </h3>
+          <p class="small text-muted mb-3">
+            Đăng nhập hoặc tạo tài khoản để tích điểm, nhận voucher và theo dõi đơn hàng dễ dàng.
+          </p>
+          <a href="/login" class="btn btn-sm btn-primary w-100 mb-2">
+            Đăng nhập / Đăng ký ngay
+          </a>
+          <p class="text-muted small mb-0">
+            <i class="bi bi-shield-check"></i> Bảo mật tài khoản & thông tin thanh toán.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<%- include('../partials/footer') %>

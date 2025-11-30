@@ -1,0 +1,175 @@
+<%- include('../partials/header') %>
+
+<h1><%= product ? 'Sửa sản phẩm' : 'Thêm sản phẩm' %></h1>
+
+<form method="post" action="/admin/products/save" class="col-md-8">
+  <% if (product) { %>
+    <input type="hidden" name="id" value="<%= product._id %>">
+  <% } %>
+
+  <div class="mb-3">
+    <label class="form-label">Tên</label>
+    <input type="text" name="name" class="form-control"
+           value="<%= product ? product.name : '' %>" required>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Thương hiệu</label>
+    <input type="text" name="brand" class="form-control"
+           value="<%= product ? product.brand : '' %>" required>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Danh mục</label>
+    <select name="category" class="form-select" required>
+      <option value="laptop"  <%= product && product.category==='laptop'  ? 'selected' : '' %>>Laptop</option>
+      <option value="monitor" <%= product && product.category==='monitor' ? 'selected' : '' %>>Màn hình</option>
+      <option value="hdd"     <%= product && product.category==='hdd'     ? 'selected' : '' %>>Ổ cứng</option>
+      <option value="pc"      <%= product && product.category==='pc'      ? 'selected' : '' %>>PC</option>
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Giá cơ bản</label>
+    <input type="number" name="price" class="form-control"
+           value="<%= product ? product.price : '' %>" required>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Sản phẩm</label>
+    <div id="variants-wrapper">
+      <% const variants = product && product.variants ? product.variants : []; %>
+
+      <% if (variants.length === 0) { %>
+        <div class="row g-2 mb-2 variant-item">
+          <div class="col-md-6">
+            <input type="text"
+                   name="variants[0][name]"
+                   class="form-control"
+                   placeholder="Phiên bản (VD: RAM 8GB)"
+                   required>
+          </div>
+          <div class="col-md-3">
+            <input type="number"
+                   name="variants[0][price]"
+                   class="form-control"
+                   placeholder="Giá"
+                   required>
+          </div>
+          <div class="col-md-3">
+            <input type="number"
+                   name="variants[0][stock]"
+                   class="form-control"
+                   placeholder="Tồn kho"
+                   required>
+          </div>
+        </div>
+      <% } else { %>
+        <% variants.forEach((v, idx) => { %>
+          <div class="row g-2 mb-2 variant-item">
+            <div class="col-md-6">
+              <input type="text"
+                     name="variants[<%= idx %>][name]"
+                     class="form-control"
+                     value="<%= v.name %>"
+                     required>
+            </div>
+            <div class="col-md-3">
+              <input type="number"
+                     name="variants[<%= idx %>][price]"
+                     class="form-control"
+                     value="<%= v.price %>"
+                     required>
+            </div>
+            <div class="col-md-3">
+              <input type="number"
+                     name="variants[<%= idx %>][stock]"
+                     class="form-control"
+                     value="<%= v.stock %>"
+                     required>
+            </div>
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
+
+    <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="btn-add-variant">
+      + Thêm phiên bản
+    </button>
+  </div>
+
+  <div class="mb-3 form-check">
+    <input type="checkbox"
+           class="form-check-input"
+           id="isNew"
+           name="isNew"
+           <%= product && product.isNew ? 'checked' : '' %>>
+    <label class="form-check-label" for="isNew">Sản phẩm mới</label>
+  </div>
+
+  <div class="mb-3 form-check">
+    <input type="checkbox"
+           class="form-check-input"
+           id="isBestSeller"
+           name="isBestSeller"
+           <%= product && product.isBestSeller ? 'checked' : '' %>>
+    <label class="form-check-label" for="isBestSeller">Sản phẩm bán chạy</label>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Mô tả</label>
+    <textarea name="description" class="form-control" rows="5" required>
+<%= product ? product.description : '' %>
+    </textarea>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Danh sách ảnh (mỗi dòng một URL)</label>
+    <textarea name="images" class="form-control" rows="3"><%=
+      product && product.images ? product.images.join('\n') : ''
+    %></textarea>
+  </div>
+
+  <button class="btn btn-primary">Lưu</button>
+  <a href="/admin/products" class="btn btn-secondary">Hủy</a>
+</form>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('btn-add-variant');
+    const wrapper = document.getElementById('variants-wrapper');
+
+    if (btn && wrapper) {
+      btn.addEventListener('click', () => {
+        const index = wrapper.querySelectorAll('.variant-item').length;
+        const div = document.createElement('div');
+        div.className = 'row g-2 mb-2 variant-item';
+        div.innerHTML = `
+          <div class="col-md-6">
+            <input type="text"
+                   name="variants[${index}][name]"
+                   class="form-control"
+                   placeholder="Tên phiên bản"
+                   required>
+          </div>
+          <div class="col-md-3">
+            <input type="number"
+                   name="variants[${index}][price]"
+                   class="form-control"
+                   placeholder="Giá"
+                   required>
+          </div>
+          <div class="col-md-3">
+            <input type="number"
+                   name="variants[${index}][stock]"
+                   class="form-control"
+                   placeholder="Tồn kho"
+                   required>
+          </div>`;
+        wrapper.appendChild(div);
+      });
+    }
+  });
+</script>
+
+<%- include('../partials/footer') %>

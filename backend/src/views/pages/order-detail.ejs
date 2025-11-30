@@ -1,0 +1,171 @@
+<%- include('../partials/header') %>
+
+<div class="container py-4">
+
+  <h1 class="h4 mb-3 text-primary fw-bold">📦 Chi tiết đơn hàng</h1>
+
+  <div class="row g-3">
+
+    <!-- TÓM TẮT ĐƠN HÀNG -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+          <h2 class="h5 mb-3">Thông tin chung</h2>
+
+          <p class="mb-1 small text-muted">Mã đơn</p>
+          <p class="fw-semibold"><%= order._id %></p>
+
+          <p class="mb-1 small text-muted">Ngày đặt</p>
+          <p class="fw-semibold">
+            <%= order.createdAt.toLocaleString('vi-VN') %>
+          </p>
+
+          <p class="mb-1 small text-muted">Trạng thái hiện tại</p>
+          <p class="fw-semibold mb-2">
+            <span
+              class="badge
+                <%= order.status === 'Pending'   ? 'bg-secondary' :
+                    order.status === 'Confirmed' ? 'bg-primary'   :
+                    order.status === 'Shipping'  ? 'bg-warning text-dark' :
+                    order.status === 'Delivered' ? 'bg-success'   :
+                    order.status === 'Cancelled' ? 'bg-danger'    :
+                                                    'bg-info' %>">
+              <%= order.status %>
+            </span>
+          </p>
+
+          <% if (order.email) { %>
+            <p class="mb-1 small text-muted">Email</p>
+            <p class="fw-semibold"><%= order.email %></p>
+          <% } %>
+
+          <% if (order.shippingAddress) { %>
+            <p class="mb-1 small text-muted">Địa chỉ giao hàng</p>
+            <p class="fw-semibold"><%= order.shippingAddress %></p>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- TỔNG QUAN TIỀN -->
+      <%
+        const subtotal = order.items.reduce(
+          (sum, it) => sum + it.price * it.quantity,
+          0
+        );
+        const tax = Math.round(subtotal * 0.1);           // VAT 10%
+        const discountValue = order.discountValue || 0;   // tiền từ mã giảm giá
+        const usedPoints = order.usedLoyaltyPoints || 0;  // số điểm đã dùng
+        const discountFromPoints = usedPoints * 1000;     // tiền từ điểm thưởng
+      %>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h2 class="h5 mb-3">Tổng tiền</h2>
+
+          <ul class="list-group mb-2">
+            <li class="list-group-item d-flex justify-content-between">
+              <span>Tổng tiền hàng</span>
+              <span><%= subtotal.toLocaleString('vi-VN') %> ₫</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span>Thuế (VAT 10%)</span>
+              <span><%= tax.toLocaleString('vi-VN') %> ₫</span>
+            </li>
+
+            <% if (discountValue > 0 || usedPoints > 0) { %>
+              <li class="list-group-item">
+                <strong>Giảm giá:</strong><br>
+                <% if (discountValue > 0) { %>
+                  - <%= discountValue.toLocaleString('vi-VN') %> ₫
+                  <% if (order.discountCode) { %>
+                    (Mã: <%= order.discountCode.code || order.discountCode %>)
+                  <% } else { %>
+                    (Mã giảm giá)
+                  <% } %>
+                  <br>
+                <% } %>
+                <% if (usedPoints > 0) { %>
+                  - <%= discountFromPoints.toLocaleString('vi-VN') %> ₫
+                  (Sử dụng <%= usedPoints.toLocaleString('vi-VN') %> điểm)
+                <% } %>
+              </li>
+            <% } %>
+
+            <li class="list-group-item d-flex justify-content-between">
+              <strong>Tổng thanh toán</strong>
+              <strong>
+                <%= order.totalAmount.toLocaleString('vi-VN') %> ₫
+              </strong>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- LỊCH SỬ & SẢN PHẨM -->
+    <div class="col-lg-8">
+      <!-- Lịch sử trạng thái -->
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+          <h2 class="h5 mb-3">Lịch sử trạng thái</h2>
+          <table class="table table-sm align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Trạng thái</th>
+                <th>Thời gian</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% order.history
+                  .sort((a,b)=>b.updatedAt - a.updatedAt)
+                  .forEach(h => { %>
+                <tr>
+                  <td><%= h.status %></td>
+                  <td><%= new Date(h.updatedAt).toLocaleString('vi-VN') %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Sản phẩm -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h2 class="h5 mb-3">Sản phẩm trong đơn hàng</h2>
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead>
+                <tr>
+                  <th>Sản phẩm</th>
+                  <th>Phiên bản</th>
+                  <th class="text-nowrap">Giá</th>
+                  <th class="text-nowrap">Số lượng</th>
+                  <th class="text-nowrap">Thành tiền</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% order.items.forEach(it => { %>
+                  <tr>
+                    <td><%= it.name %></td>
+                    <td><%= it.variantName || '-' %></td>
+                    <td class="text-nowrap">
+                      <%= it.price.toLocaleString('vi-VN') %> ₫
+                    </td>
+                    <td><%= it.quantity %></td>
+                    <td class="text-nowrap">
+                      <%= (it.price * it.quantity).toLocaleString('vi-VN') %> ₫
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
