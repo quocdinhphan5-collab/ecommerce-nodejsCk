@@ -2,7 +2,7 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const { sendMail } = require('../utils/mailer');
 
-// ========== ĐĂNG KÝ ==========
+// ĐĂNG KÝ
 async function getRegister(req, res) {
   res.render('auth/register', { title: 'Đăng ký', error: null });
 }
