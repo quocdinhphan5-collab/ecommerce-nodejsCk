@@ -1,0 +1,22 @@
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: ecommerce_db
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./db-data:/data/db
+
+  app:
+    build: ./backend
+    container_name: ecommerce_app
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGO_URL=mongodb://mongo:27017/ecommerce_db   # <-- CHUẨN
+      - SESSION_SECRET=super_secret_key_change_me
+      - ADMIN_EMAIL=admin@example.com
+      - ADMIN_PASSWORD=admin123
+    depends_on:
+      - mongo

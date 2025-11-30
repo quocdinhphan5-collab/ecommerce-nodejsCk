@@ -1,0 +1,303 @@
+<%- include('../partials/header') %>
+
+<div class="container py-4">
+
+  <h1 class="h3 mb-4 text-primary fw-bold">🧾 Thanh toán</h1>
+
+  <div class="row g-4">
+    <!-- CỘT TRÁI: FORM THANH TOÁN -->
+    <div class="col-md-7">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+
+          <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-danger mb-3"><%= error %></div>
+          <% } %>
+
+          <!-- Form thanh toán -->
+          <form method="post" action="/checkout">
+            <h4 class="h5 mb-3">Thông tin giao hàng</h4>
+
+            <div class="mb-3">
+              <label class="form-label">Họ tên</label>
+              <input
+                type="text"
+                name="fullName"
+                class="form-control"
+                value="<%= (user && user.fullName) ? user.fullName : '' %>"
+                required
+              >
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input
+                type="email"
+                name="email"
+                class="form-control"
+                value="<%= (user && user.email) ? user.email : '' %>"
+                required
+              >
+              <div class="form-text">
+                Email dùng để nhận thông tin đơn hàng và hóa đơn.
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Địa chỉ giao hàng</label>
+              <textarea
+                name="address"
+                class="form-control"
+                rows="3"
+                placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"
+              ><%= (user && user.address) ? user.address : '' %></textarea>
+            </div>
+
+            <!-- Nếu có danh sách địa chỉ đã lưu -->
+            <% if (user && user.addresses && user.addresses.length > 0) { %>
+              <div class="mb-3">
+                <label class="form-label">Hoặc chọn địa chỉ đã lưu</label>
+                <select name="savedAddressId" class="form-select">
+                  <option value="">-- Không chọn --</option>
+                  <% user.addresses.forEach(function(addr) { %>
+                    <option value="<%= addr._id %>">
+                      <%= addr.fullName %> - <%= addr.phone %> - <%= addr.street %>, <%= addr.ward %>, <%= addr.district %>, <%= addr.province %>
+                    </option>
+                  <% }) %>
+                </select>
+                <div class="form-text">
+                  Nếu để trống ô địa chỉ phía trên, hệ thống sẽ dùng địa chỉ được chọn ở đây.
+                </div>
+              </div>
+            <% } %>
+
+            <!-- ƯU ĐÃI & GIẢM GIÁ -->
+            <h4 class="h5 mt-4">Ưu đãi & giảm giá</h4>
+
+            <!-- MÃ GIẢM GIÁ -->
+            <div class="mb-3">
+              <label class="form-label">Mã giảm giá</label>
+              <div class="input-group">
+                <input
+                  type="text"
+                  name="discountCode"
+                  id="discountCodeInput"
+                  class="form-control"
+                  placeholder="Nhập mã (nếu có)"
+                >
+                <button type="button" class="btn btn-outline-primary" id="btnApplyDiscount">
+                  Áp dụng
+                </button>
+              </div>
+              <div id="discountMessage" class="form-text text-success"></div>
+              <div id="discountError" class="form-text text-danger"></div>
+            </div>
+
+            <!-- SỬ DỤNG ĐIỂM THƯỞNG -->
+            <% if (user && user.loyaltyPoints && user.loyaltyPoints > 0) { %>
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" name="usePoints" id="usePointsCheck">
+                <label class="form-check-label" for="usePointsCheck">
+                  Sử dụng toàn bộ <strong><%= user.loyaltyPoints %></strong> điểm thưởng để giảm giá
+                </label>
+              </div>
+            <% } %>
+
+            <div class="mt-4 d-flex justify-content-between">
+              <a href="/cart" class="btn btn-outline-secondary">
+                ← Quay lại giỏ hàng
+              </a>
+              <button type="submit" class="btn btn-success">
+                Đặt hàng
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- CỘT PHẢI: TÓM TẮT ĐƠN HÀNG -->
+    <div class="col-md-5">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h4 class="h5 mb-3">Tóm tắt đơn hàng</h4>
+
+          <%
+            const hasCart = cart && cart.items && cart.items.length;
+            const subtotal = hasCart && cart.total ? cart.total : 0;
+            const tax = Math.round(subtotal * 0.1); // VAT 10%
+            const shippingFee = subtotal >= 2000000 ? 0 : 50000; // freeship từ 2tr
+            const grandTotal = subtotal + tax + shippingFee;
+            const maxPoints = (user && user.loyaltyPoints) ? user.loyaltyPoints : 0;
+          %>
+
+          <% if (!hasCart) { %>
+            <p class="text-muted">Giỏ hàng trống. Vui lòng thêm sản phẩm trước khi thanh toán.</p>
+            <a href="/products" class="btn btn-primary btn-sm">
+              Tiếp tục mua sắm
+            </a>
+          <% } else { %>
+            <input type="hidden" id="baseSubtotal" value="<%= subtotal %>">
+            <input type="hidden" id="baseTax" value="<%= tax %>">
+            <input type="hidden" id="baseShipping" value="<%= shippingFee %>">
+            <input type="hidden" id="maxPoints" value="<%= maxPoints %>">
+
+            <ul class="list-group mb-3">
+              <% cart.items.forEach(function (item) { %>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong><%= item.name %></strong>
+                    <% if (item.variantName) { %>
+                      <div class="text-muted small"><%= item.variantName %></div>
+                    <% } %>
+                    <div class="text-muted small">Số lượng: <%= item.quantity %></div>
+                  </div>
+                  <span class="text-nowrap">
+                    <%= (item.price * item.quantity).toLocaleString('vi-VN') %> ₫
+                  </span>
+                </li>
+              <% }) %>
+              <li class="list-group-item d-flex justify-content-between">
+                <span>Tổng tạm tính</span>
+                <span><%= subtotal.toLocaleString('vi-VN') %> ₫</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between">
+                <span>Thuế (VAT 10%)</span>
+                <span><%= tax.toLocaleString('vi-VN') %> ₫</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between">
+                <span>Phí vận chuyển</span>
+                <span><%= shippingFee.toLocaleString('vi-VN') %> ₫</span>
+              </li>
+
+              <!-- GIẢM GIÁ -->
+              <li class="list-group-item d-flex justify-content-between" id="discountRow" style="display:none;">
+                <span>Giảm giá</span>
+                <div class="text-end" id="discountLines" style="white-space: pre-line;"></div>
+              </li>
+
+              <li class="list-group-item d-flex justify-content-between">
+                <strong>Tổng cộng</strong>
+                <strong id="grandTotalText">
+                  <%= grandTotal.toLocaleString('vi-VN') %> ₫
+                </strong>
+              </li>
+            </ul>
+
+            <p class="small text-muted mb-0">
+              <i class="bi bi-info-circle"></i>
+              Đơn hàng từ <strong>2.000.000 ₫</strong> được miễn phí vận chuyển.
+            </p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const btnApply = document.getElementById('btnApplyDiscount');
+  const input = document.getElementById('discountCodeInput');
+  const msg = document.getElementById('discountMessage');
+  const err = document.getElementById('discountError');
+
+  const discountRow = document.getElementById('discountRow');
+  const discountLines = document.getElementById('discountLines');
+  const grandTotalText = document.getElementById('grandTotalText');
+
+  const usePointsCheckbox = document.getElementById('usePointsCheck');
+
+  // Lấy giá trị gốc từ hidden input
+  const baseSubtotal = Number((document.getElementById('baseSubtotal')?.value) || 0);
+  const baseTax = Number((document.getElementById('baseTax')?.value) || 0);
+  const baseShipping = Number((document.getElementById('baseShipping')?.value) || 0);
+  const maxPoints = Number((document.getElementById('maxPoints')?.value) || 0);
+
+  // Biến theo dõi giảm giá
+  let discountFromCode = 0;     // tiền giảm từ mã
+  let discountFromPoints = 0;   // tiền giảm từ điểm (points * 1000)
+
+  function fmt(v) {
+    return new Intl.NumberFormat('vi-VN').format(v);
+  }
+
+  function updateSummary() {
+    const totalBefore = baseSubtotal + baseTax + baseShipping;
+    let grand = totalBefore - discountFromCode - discountFromPoints;
+    if (grand < 0) grand = 0;
+    if (grandTotalText) {
+      grandTotalText.textContent = fmt(grand) + ' ₫';
+    }
+    const lines = [];
+    if (discountFromCode > 0) {
+      lines.push('-' + fmt(discountFromCode) + ' ₫ (Mã giảm giá)');
+    }
+    if (discountFromPoints > 0) {
+      lines.push('-' + fmt(discountFromPoints) + ' ₫ (Điểm thưởng)');
+    }
+    if (lines.length === 0) {
+      if (discountRow) discountRow.style.display = 'none';
+      if (discountLines) discountLines.textContent = '';
+    } else {
+      if (discountRow) discountRow.style.display = 'flex';
+      if (discountLines) discountLines.textContent = lines.join('\n');
+    }
+  }
+
+  // Áp dụng mã giảm giá
+  if (btnApply) {
+    btnApply.addEventListener('click', async function () {
+      msg.textContent = '';
+      err.textContent = '';
+      const code = (input.value || '').trim();
+      if (!code) {
+        err.textContent = 'Vui lòng nhập mã giảm giá.';
+        return;
+      }
+      try {
+        const res = await fetch('/checkout/apply-discount', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ discountCode: code })
+        });
+        const data = await res.json();
+        if (!data.success) {
+          err.textContent = data.message || 'Mã giảm giá không hợp lệ.';
+          msg.textContent = '';
+          discountFromCode = 0;
+          updateSummary();
+          return;
+        }
+        msg.textContent = 'Đã áp dụng mã giảm giá.';
+        err.textContent = '';
+        discountFromCode = data.discountValue || 0;
+        updateSummary();
+      } catch (e) {
+        console.error('Lỗi applyDiscount:', e);
+        err.textContent = 'Có lỗi xảy ra, vui lòng thử lại.';
+        msg.textContent = '';
+      }
+    });
+  }
+
+  // Sử dụng điểm thưởng (1 điểm = 1000 VND)
+  if (usePointsCheckbox) {
+    usePointsCheckbox.addEventListener('change', function () {
+      if (this.checked) {
+        discountFromPoints = maxPoints * 1000;
+      } else {
+        discountFromPoints = 0;
+      }
+      updateSummary();
+    });
+  }
+
+  updateSummary();
+});
+</script>
+
+<%- include('../partials/footer') %>

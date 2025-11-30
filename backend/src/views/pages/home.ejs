@@ -1,0 +1,279 @@
+<%- include('../partials/header') %>
+
+<div class="container py-4">
+
+  <!-- HERO BANNER TRANG CHỦ -->
+  <section class="mb-4">
+    <div
+      class="row align-items-center g-3 rounded-4 p-4 p-md-5"
+      style="
+        background: linear-gradient(135deg, #e0f2fe, #dbeafe, #e9d5ff);
+        box-shadow: 0 18px 35px rgba(15,23,42,0.12);
+      "
+    >
+      <div class="col-md-7">
+        <h1 class="h3 h-md-2 fw-bold mb-3" style="color: #0f172a;">
+          Chào mừng bạn đến với cửa hàng máy tính
+        </h1>
+        <p class="mb-3 text-muted">
+          Laptop, PC, màn hình, linh kiện chính hãng – khám phá các sản phẩm mới nhất, bán chạy nhất
+          và phù hợp nhất với nhu cầu học tập, làm việc, giải trí của bạn.
+        </p>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <a href="/products?special=new" class="btn btn-primary">
+            🔥 Xem sản phẩm mới
+          </a>
+          <a href="/products?special=best" class="btn btn-outline-primary">
+            ⭐ Sản phẩm bán chạy
+          </a>
+        </div>
+        <div class="d-flex flex-wrap gap-3 small text-muted">
+          <span><i class="bi bi-truck"></i> Giao hàng nhanh toàn quốc</span>
+          <span><i class="bi bi-shield-check"></i> Bảo hành chính hãng</span>
+          <span><i class="bi bi-credit-card"></i> Hỗ trợ trả góp</span>
+        </div>
+      </div>
+
+      <div class="col-md-5 text-center">
+        <img
+          src="/images/banner.jpg"
+          alt="Khuyến mãi trang chủ"
+          class="img-fluid rounded-3 shadow-sm"
+          style="max-height: 260px; object-fit: cover;"
+        >
+      </div>
+    </div>
+  </section>
+
+  <!-- SẢN PHẨM MỚI -->
+  <% if (latest && latest.length > 0) { %>
+    <section class="mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h4 mb-0 text-primary fw-bold">✨ Sản phẩm mới</h2>
+        <a href="/products?special=new" class="small text-decoration-none">
+          Xem tất cả sản phẩm mới →
+        </a>
+      </div>
+      <div class="row g-3">
+        <% latest.forEach(p => { %>
+          <div class="col-6 col-md-3">
+            <div class="card h-100 border-0 shadow-sm product-card">
+              <div class="position-relative">
+                <a href="/product/<%= p._id %>">
+                  <img
+                    src="<%= p.images && p.images[0] ? p.images[0] : 'https://via.placeholder.com/300x200' %>"
+                    class="card-img-top p-3"
+                    alt="<%= p.name %>"
+                    style="height: 200px; object-fit: contain;"
+                  >
+                </a>
+                <span class="badge bg-success position-absolute top-0 start-0 m-2">
+                  Mới
+                </span>
+              </div>
+              <div class="card-body d-flex flex-column">
+                <h6 class="card-title mb-1 text-truncate" title="<%= p.name %>">
+                  <%= p.name %>
+                </h6>
+                <p class="card-text text-danger fw-bold mb-2">
+                  <%= p.price.toLocaleString('vi-VN') %> ₫
+                </p>
+                <a href="/product/<%= p._id %>" class="btn btn-primary btn-sm mt-auto">
+                  Xem chi tiết
+                </a>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
+
+  <!-- LAPTOP -->
+  <% if (laptops && laptops.length > 0) { %>
+    <section class="mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h4 mb-0 text-primary fw-bold">💻 Laptop</h2>
+        <a href="/products?category=laptop" class="small text-decoration-none">
+          Xem tất cả laptop →
+        </a>
+      </div>
+      <div class="row g-3">
+        <% laptops.forEach(p => { %>
+          <div class="col-6 col-md-3">
+            <div class="card h-100 border-0 shadow-sm product-card">
+              <div class="position-relative">
+                <a href="/product/<%= p._id %>">
+                  <img
+                    src="<%= p.images && p.images[0] ? p.images[0] : 'https://via.placeholder.com/300x200' %>"
+                    class="card-img-top p-3"
+                    alt="<%= p.name %>"
+                    style="height: 200px; object-fit: contain;"
+                  >
+                </a>
+                <% if (p.isBestSeller) { %>
+                  <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2">
+                    Bán chạy
+                  </span>
+                <% } %>
+              </div>
+              <div class="card-body d-flex flex-column">
+                <h6 class="card-title mb-1 text-truncate" title="<%= p.name %>">
+                  <%= p.name %>
+                </h6>
+                <p class="card-text text-danger fw-bold mb-2">
+                  <%= p.price.toLocaleString('vi-VN') %> ₫
+                </p>
+                <a href="/product/<%= p._id %>" class="btn btn-primary btn-sm mt-auto">
+                  Xem chi tiết
+                </a>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
+
+  <!-- MÀN HÌNH -->
+  <% if (monitors && monitors.length > 0) { %>
+    <section class="mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h4 mb-0 text-primary fw-bold">🖥️ Màn hình</h2>
+        <a href="/products?category=monitor" class="small text-decoration-none">
+          Xem tất cả màn hình →
+        </a>
+      </div>
+      <div class="row g-3">
+        <% monitors.forEach(p => { %>
+          <div class="col-6 col-md-3">
+            <div class="card h-100 border-0 shadow-sm product-card">
+              <div class="position-relative">
+                <a href="/product/<%= p._id %>">
+                  <img
+                    src="<%= p.images && p.images[0] ? p.images[0] : 'https://via.placeholder.com/300x200' %>"
+                    class="card-img-top p-3"
+                    alt="<%= p.name %>"
+                    style="height: 200px; object-fit: contain;"
+                  >
+                </a>
+              </div>
+              <div class="card-body d-flex flex-column">
+                <h6 class="card-title mb-1 text-truncate" title="<%= p.name %>">
+                  <%= p.name %>
+                </h6>
+                <p class="card-text text-danger fw-bold mb-2">
+                  <%= p.price.toLocaleString('vi-VN') %> ₫
+                </p>
+                <a href="/product/<%= p._id %>" class="btn btn-primary btn-sm mt-auto">
+                  Xem chi tiết
+                </a>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
+
+  <!-- Ổ CỨNG (HDD) - nếu có -->
+  <% if (typeof hdds !== 'undefined' && hdds && hdds.length > 0) { %>
+    <section class="mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h4 mb-0 text-primary fw-bold">💾 Ổ cứng & Lưu trữ</h2>
+        <a href="/products?category=hdd" class="small text-decoration-none">
+          Xem tất cả ổ cứng →
+        </a>
+      </div>
+      <div class="row g-3">
+        <% hdds.forEach(p => { %>
+          <div class="col-6 col-md-3">
+            <div class="card h-100 border-0 shadow-sm product-card">
+              <div class="position-relative">
+                <a href="/product/<%= p._id %>">
+                  <img
+                    src="<%= p.images && p.images[0] ? p.images[0] : 'https://via.placeholder.com/300x200' %>"
+                    class="card-img-top p-3"
+                    alt="<%= p.name %>"
+                    style="height: 200px; object-fit: contain;"
+                  >
+                </a>
+              </div>
+              <div class="card-body d-flex flex-column">
+                <h6 class="card-title mb-1 text-truncate" title="<%= p.name %>">
+                  <%= p.name %>
+                </h6>
+                <p class="card-text text-danger fw-bold mb-2">
+                  <%= p.price.toLocaleString('vi-VN') %> ₫
+                </p>
+                <a href="/product/<%= p._id %>" class="btn btn-primary btn-sm mt-auto">
+                  Xem chi tiết
+                </a>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
+
+  <!-- BANNER CUỐI TRANG – CTA -->
+  <section class="mt-5 mb-4">
+    <div
+      class="row g-3 align-items-center rounded-4 p-4 p-md-5"
+      style="
+        background: linear-gradient(135deg, #eff6ff, #e0f2fe, #ede9fe);
+        box-shadow: 0 16px 28px rgba(15,23,42,0.12);
+      "
+    >
+      <div class="col-md-8">
+        <h2 class="h4 h-md-3 fw-bold mb-2" style="color:#0f172a;">
+          Cần tư vấn cấu hình hoặc chọn sản phẩm phù hợp?
+        </h2>
+        <p class="mb-3 text-muted">
+          Đội ngũ kỹ thuật luôn sẵn sàng hỗ trợ bạn build PC, chọn laptop, màn hình, linh kiện
+          phù hợp với ngân sách và nhu cầu thực tế.
+        </p>
+
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <a href="/products?special=best" class="btn btn-primary">
+            🔥 Xem khuyến mãi & sản phẩm hot
+          </a>
+          <a href="/contact" class="btn btn-outline-primary">
+            💬 Liên hệ tư vấn miễn phí
+          </a>
+        </div>
+
+        <div class="d-flex flex-wrap gap-3 small text-muted">
+          <span><i class="bi bi-telephone"></i> Hotline: <strong>1900 1234</strong> (8:00 – 21:00)</span>
+          <span><i class="bi bi-geo-alt"></i> Showroom: Quận 1, TP. Hồ Chí Minh</span>
+          <span><i class="bi bi-envelope"></i> Email: support@ecommerce.com</span>
+        </div>
+      </div>
+
+      <div class="col-md-4 text-center">
+        <div
+          class="rounded-4 p-3 p-md-4 h-100 d-flex flex-column justify-content-center"
+          style="background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(79,70,229,0.15));"
+        >
+          <p class="small text-uppercase text-muted mb-1">Ưu đãi thành viên</p>
+          <h3 class="h5 fw-bold mb-2" style="color:#1d4ed8;">
+            Giảm thêm 5% cho đơn hàng đầu tiên
+          </h3>
+          <p class="small text-muted mb-3">
+            Đăng nhập hoặc tạo tài khoản để tích điểm, nhận voucher và theo dõi đơn hàng dễ dàng.
+          </p>
+          <a href="/login" class="btn btn-sm btn-primary w-100 mb-2">
+            Đăng nhập / Đăng ký ngay
+          </a>
+          <p class="text-muted small mb-0">
+            <i class="bi bi-shield-check"></i> Bảo mật tài khoản & thông tin thanh toán.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<%- include('../partials/footer') %>

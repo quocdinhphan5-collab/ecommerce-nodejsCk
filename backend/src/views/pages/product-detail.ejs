@@ -1,0 +1,305 @@
+<%- include('../partials/header') %>
+
+<div class="container py-4">
+
+  <div class="row g-4">
+    <!-- ẢNH SẢN PHẨM -->
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+
+          <% if (product.images && product.images.length) { %>
+            <div id="productCarousel" class="carousel slide" data-bs-ride="carousel">
+              <div class="carousel-inner">
+                <% product.images.forEach((img, idx) => { %>
+                  <div class="carousel-item <%= idx === 0 ? 'active' : '' %>">
+                    <img
+                      src="<%= img %>"
+                      class="d-block w-100 rounded"
+                      alt="<%= product.name %>"
+                      style="max-height: 380px; object-fit: contain; background:#f9fafb;"
+                    >
+                  </div>
+                <% }) %>
+              </div>
+              <% if (product.images.length > 1) { %>
+                <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+                  <span class="carousel-control-prev-icon"></span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+                  <span class="carousel-control-next-icon"></span>
+                </button>
+              <% } %>
+            </div>
+          <% } else { %>
+            <div class="d-flex align-items-center justify-content-center" style="height: 320px; background:#f9fafb;">
+              <span class="text-muted">Chưa có hình ảnh sản phẩm</span>
+            </div>
+          <% } %>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- THÔNG TIN SẢN PHẨM -->
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body d-flex flex-column">
+
+          <h2 class="h4 mb-1"><%= product.name %></h2>
+
+          <div class="mb-2">
+            <% if (product.brand) { %>
+              <span class="badge bg-light text-muted border me-1">
+                Thương hiệu: <strong><%= product.brand %></strong>
+              </span>
+            <% } %>
+            <% if (product.category) { %>
+              <span class="badge bg-light text-muted border">
+                Danh mục: <%= product.category %>
+              </span>
+            <% } %>
+          </div>
+
+          <!-- Rating tổng quan -->
+          <div class="mb-2">
+            <% if (product.averageRating && product.numRatings) { %>
+              <span class="me-2">
+                <% const fullStars = Math.round(product.averageRating || 0); %>
+                <% for (let i = 1; i <= 5; i++) { %>
+                  <% if (i <= fullStars) { %>
+                    <span class="text-warning">★</span>
+                  <% } else { %>
+                    <span class="text-muted">★</span>
+                  <% } %>
+                <% } %>
+              </span>
+              <small class="text-muted">
+                <%= product.averageRating.toFixed(1) %>/5 · <%= product.numRatings %> đánh giá
+              </small>
+            <% } else { %>
+              <small class="text-muted">Chưa có đánh giá</small>
+            <% } %>
+          </div>
+
+          <!-- Giá -->
+          <p class="fs-4 fw-bold text-danger mb-2">
+            <%= product.price.toLocaleString('vi-VN') %> ₫
+          </p>
+
+          <!-- Chọn phiên bản -->
+          <% if (product.variants && product.variants.length) { %>
+            <div class="mb-3">
+              <label class="form-label">Chọn phiên bản</label>
+              <select id="variantSelect" class="form-select">
+                <% product.variants.forEach((v, idx) => { %>
+                  <option value="<%= idx %>">
+                    <%= v.name %> - <%= v.price.toLocaleString('vi-VN') %> ₫ (Tồn kho: <%= v.stock %>)
+                  </option>
+                <% }) %>
+              </select>
+            </div>
+          <% } %>
+
+          <!-- Thêm vào giỏ -->
+          <form id="addToCartForm" method="post" action="/cart/add" class="mb-2">
+            <input type="hidden" name="productId" value="<%= product._id %>">
+            <input type="hidden" name="variantIndex" id="variantIndexInput" value="">
+
+            <label class="form-label">Số lượng</label>
+            <div class="input-group" style="max-width: 260px;">
+              <span class="input-group-text">SL</span>
+              <input
+                type="number"
+                name="quantity"
+                class="form-control"
+                value="1"
+                min="1"
+              >
+              <button class="btn btn-primary" type="submit">
+                Thêm vào giỏ
+              </button>
+            </div>
+          </form>
+          <div id="addCartAlert" class="alert d-none mt-2"></div>
+
+          <!-- Mô tả sản phẩm -->
+          <div class="mt-3">
+            <h5 class="h6">Mô tả sản phẩm</h5>
+            <p class="mb-0" style="white-space: pre-line;"><%= product.description %></p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="my-4">
+
+  <!-- ĐÁNH GIÁ & BÌNH LUẬN -->
+  <div id="reviews-section" class="row">
+    <div class="col-md-7">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+          <h3 class="h5 mb-3">Đánh giá & Bình luận</h3>
+
+          <!-- Danh sách bình luận -->
+          <div id="review-list">
+            <% (product.reviews || []).forEach(r => { %>
+              <div class="border rounded p-2 mb-2">
+                <strong><%= r.name %></strong>
+                <% if (r.rating) { %>
+                  <span class="ms-1">
+                    <%= '★'.repeat(r.rating) %><%= '☆'.repeat(5 - r.rating) %>
+                  </span>
+                <% } %>
+                <div><%= r.comment %></div>
+                <small class="text-muted">
+                  <%= new Date(r.createdAt).toLocaleString('vi-VN') %>
+                </small>
+              </div>
+            <% }) %>
+          </div>
+
+          <% if (!product.reviews || product.reviews.length === 0) { %>
+            <p class="text-muted mt-2 mb-0">Chưa có bình luận nào. Hãy là người đầu tiên!</p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- FORM GỬI BÌNH LUẬN -->
+    <div class="col-md-5">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h5 class="h6 mb-3">Gửi bình luận</h5>
+
+          <form id="commentForm" method="post" action="/product/<%= product._id %>/reviews">
+            <div class="mb-2">
+              <label class="form-label">Tên hiển thị</label>
+              <input
+                type="text"
+                name="name"
+                class="form-control"
+                value="<%= currentUser ? currentUser.fullName : '' %>"
+                required
+              >
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Nội dung</label>
+              <textarea name="comment" class="form-control" rows="3" required></textarea>
+            </div>
+
+            <% if (currentUser) { %>
+              <div class="mb-2">
+                <label class="form-label">Đánh giá (sao)</label>
+                <select name="rating" class="form-select">
+                  <option value="">Đánh giá sao</option>
+                  <option value="1">1 sao</option>
+                  <option value="2">2 sao</option>
+                  <option value="3">3 sao</option>
+                  <option value="4">4 sao</option>
+                  <option value="5">5 sao</option>
+                </select>
+              </div>
+            <% } %>
+
+            <button class="btn btn-primary mt-1">Gửi</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  socket.emit('join-product', '<%= product._id %>');
+  socket.on('new-review', (r) => {
+    const list = document.getElementById('review-list');
+    const div = document.createElement('div');
+    div.className = 'border rounded p-2 mb-2';
+    div.innerHTML = `
+      <strong>${r.name}</strong>
+      ${r.rating ? '<span class="ms-1">' + '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating) + '</span>' : ''}
+      <div>${r.comment}</div>
+      <small class="text-muted">${new Date(r.createdAt).toLocaleString('vi-VN')}</small>
+    `;
+    if (list) list.prepend(div);
+  });
+  socket.on('rating-updated', (info) => {
+    console.log('rating updated', info);
+  });
+</script>
+
+<script>
+  // Đồng bộ variant chọn với hidden input
+  (function () {
+    const variantSelect = document.getElementById('variantSelect');
+    const hiddenVariant = document.getElementById('variantIndexInput');
+    if (variantSelect && hiddenVariant) {
+      hiddenVariant.value = variantSelect.value;
+      variantSelect.addEventListener('change', () => {
+        hiddenVariant.value = variantSelect.value;
+      });
+    }
+  })();
+
+  // AJAX thêm vào giỏ hàng
+  (function () {
+    const form = document.getElementById('addToCartForm');
+    const alertBox = document.getElementById('addCartAlert');
+
+    if (!form || !alertBox) return;
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+      const params = new URLSearchParams();
+
+      for (const [key, value] of formData.entries()) {
+        params.append(key, value);
+      }
+
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+          },
+          body: params.toString(),
+        });
+
+        const data = await res.json();
+
+        alertBox.classList.remove('d-none', 'alert-success', 'alert-danger');
+
+        if (data.success) {
+          alertBox.classList.add('alert-success');
+          alertBox.textContent =
+            data.message || 'Đã thêm sản phẩm vào giỏ hàng';
+
+          const badge = document.querySelector('#cart-count');
+          if (badge && typeof data.cartQty === 'number') {
+            badge.textContent = data.cartQty;
+          }
+        } else {
+          alertBox.classList.add('alert-danger');
+          alertBox.textContent =
+            data.message || 'Không thể thêm sản phẩm vào giỏ hàng.';
+        }
+      } catch (err) {
+        console.error('Lỗi fetch addToCart:', err);
+        alertBox.classList.remove('d-none');
+        alertBox.classList.add('alert-danger');
+        alertBox.textContent = 'Có lỗi kết nối, vui lòng thử lại.';
+      }
+    });
+  })();
+</script>
+
+<%- include('../partials/footer') %>

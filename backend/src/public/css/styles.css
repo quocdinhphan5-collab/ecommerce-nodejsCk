@@ -1,0 +1,193 @@
+:root {
+  --blue-primary: #1d9bf0;        /* xanh da trời tươi */
+  --blue-primary-dark: #2563eb;   /* xanh đậm hơn */
+  --blue-soft: #e0f2fe;           /* nền xanh rất nhạt */
+  --accent-violet: #a855f7;       /* tím nhấn */
+  --card-bg: #ffffff;
+  --card-border: #e5e7eb;
+  --text-main: #0f172a;
+  --text-muted-soft: #6b7280;
+}
+
+body {
+  /* Nền sáng, hơi gradient xanh tím, kiểu ecommerce hiện đại */
+  background:
+    radial-gradient(circle at top left, rgba(191, 219, 254, 0.85) 0, transparent 55%),
+    radial-gradient(circle at bottom right, rgba(221, 214, 254, 0.7) 0, transparent 55%),
+    #f3f4f6;
+  color: var(--text-main);
+}
+
+/* Container chính cho nội dung */
+.container.py-4,
+.container.mb-5 {
+  max-width: 1200px;
+}
+
+/* Card chung (áp dụng cho mọi trang, cả giỏ hàng) */
+.card {
+  background: var(--card-bg);
+  border-radius: 14px;
+  border: 1px solid var(--card-border);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+}
+
+/* Tiêu đề trang */
+h1, .h1, .h3 {
+  color: var(--blue-primary);
+}
+
+
+/* Card lọc sản phẩm – gradient rất nhẹ */
+.card.shadow-sm.mb-4.border-0 {
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.25) !important;
+  background: linear-gradient(145deg, #ffffff, #f9fafb);
+}
+
+/* Card sản phẩm */
+.card.product-card {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.card.product-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 65%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
+.card.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
+  border-color: rgba(37, 99, 235, 0.45);
+}
+
+.card.product-card:hover::before {
+  opacity: 1;
+}
+
+/* Tiêu đề sản phẩm */
+.card.product-card .card-title {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+/* Badge brand + category */
+.card.product-card .badge.bg-light {
+  background: linear-gradient(135deg, #eff6ff, #e0f2fe) !important;
+  color: var(--text-muted-soft) !important;
+  border-color: #d1d5db !important;
+}
+
+/* Giá */
+.card.product-card .card-text.text-danger {
+  color: var(--blue-primary-dark) !important;
+}
+
+/* Rating sao */
+.product-card .text-warning {
+  color: #f59e0b !important;
+}
+
+/* Nút primary – gradient xanh */
+.btn-primary {
+  background-image: linear-gradient(135deg, var(--blue-primary), var(--blue-primary-dark));
+  border: none;
+  color: #ffffff;
+  box-shadow: 0 0 0 rgba(37, 99, 235, 0.35);
+  transition: box-shadow 0.18s ease, transform 0.1s ease, background-position 0.18s ease;
+  background-size: 200% 100%;
+  background-position: 0 0;
+}
+
+.btn-primary:hover {
+  background-position: 100% 0;
+  box-shadow: 0 0 16px rgba(37, 99, 235, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 0 6px rgba(37, 99, 235, 0.35);
+}
+
+/* Form controls – viền xanh, bo góc */
+.form-control,
+.form-select {
+  background-color: #ffffff;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  color: var(--text-main);
+}
+
+.form-control::placeholder {
+  color: #9ca3af;
+}
+
+.form-control:focus,
+.form-select:focus {
+  background-color: #ffffff;
+  color: var(--text-main);
+  border-color: var(--blue-primary);
+  box-shadow: 0 0 0 0.16rem rgba(37, 99, 235, 0.25);
+}
+
+/* Label nhỏ hơn, màu nhẹ */
+.form-label.small {
+  color: var(--text-muted-soft);
+}
+
+/* Badge “Mới”, “Bán chạy” – gradient tươi */
+.badge.bg-success {
+  background-image: linear-gradient(135deg, #22c55e, #16a34a) !important;
+}
+
+.badge.bg-warning {
+  background-image: linear-gradient(135deg, #fde047, #facc15) !important;
+  color: #854d0e !important;
+}
+
+/* Alert khi không có sản phẩm */
+.alert-warning {
+  background: linear-gradient(135deg, #fef9c3, #ffedd5);
+  border-color: #fbbf24;
+  color: #854d0e;
+}
+
+/* Pagination – bo tròn, màu xanh */
+.pagination .page-link {
+  background-color: #ffffff;
+  border-color: #d1d5db;
+  color: var(--text-muted-soft);
+}
+
+.pagination .page-item.active .page-link {
+  background-image: linear-gradient(135deg, var(--blue-primary), var(--accent-violet));
+  border-color: transparent;
+  color: #ffffff;
+}
+
+.pagination .page-link:hover {
+  background-color: #eff6ff;
+  color: var(--blue-primary-dark);
+}
+
+/* Link nói chung */
+a {
+  color: var(--blue-primary-dark);
+}
+
+a:hover {
+  color: var(--accent-violet);
+}
+
+/* Header filter – mô tả bên dưới tiêu đề */
+.text-muted {
+  color: var(--text-muted-soft) !important;
+}

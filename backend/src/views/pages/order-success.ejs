@@ -1,0 +1,83 @@
+<%- include('../partials/header') %>
+
+<h1>Đặt hàng thành công</h1>
+<p>Cảm ơn bạn đã mua hàng tại cửa hàng của chúng tôi.</p>
+
+<h4>Thông tin đơn hàng</h4>
+<p>Mã đơn: <strong><%= order._id %></strong></p>
+<p>Khách hàng: <strong><%= order.email %></strong></p>
+<p>Địa chỉ giao: <strong><%= order.shippingAddress %></strong></p>
+<p>Trạng thái hiện tại: <span class="badge bg-info"><%= order.status %></span></p>
+
+<h5>Sản phẩm</h5>
+<table class="table">
+  <thead>
+    <tr>
+      <th>Sản phẩm</th>
+      <th>Phiên bản</th>
+      <th>Giá</th>
+      <th>Số lượng</th>
+      <th>Thành tiền</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% order.items.forEach(it => { %>
+      <tr>
+        <td><%= it.name %></td>
+        <td><%= it.variantName || '-' %></td>
+        <td><%= it.price.toLocaleString('vi-VN') %> ₫</td>
+        <td><%= it.quantity %></td>
+        <td><%= (it.price * it.quantity).toLocaleString('vi-VN') %> ₫</td>
+      </tr>
+    <% }) %>
+  </tbody>
+</table>
+
+<%
+  const subtotal = order.items.reduce(
+    (sum, it) => sum + it.price * it.quantity,
+    0
+  );
+  const tax = Math.round(subtotal * 0.1);
+  const shippingFee = subtotal >= 2000000 ? 0 : 50000;
+  const discountValue = order.discountValue || 0;        
+  const usedPoints = order.usedLoyaltyPoints || 0;       
+  const discountFromPoints = usedPoints * 1000;         
+%>
+
+<p>Tổng tiền hàng: <strong><%= subtotal.toLocaleString('vi-VN') %> ₫</strong></p>
+<p>Thuế (VAT 10%): <strong><%= tax.toLocaleString('vi-VN') %> ₫</strong></p>
+<p>Phí vận chuyển: <strong><%= shippingFee.toLocaleString('vi-VN') %> ₫</strong></p>
+
+<% if (discountValue > 0 || usedPoints > 0) { %>
+  <p>
+    <strong>Giảm giá:</strong><br>
+
+    <% if (discountValue > 0) { %>
+      - <%= discountValue.toLocaleString('vi-VN') %> ₫
+      <% if (order.discountCode) { %>
+        (Mã: <%= order.discountCode.code || order.discountCode %>)
+      <% } else { %>
+        (Mã giảm giá)
+      <% } %>
+      <br>
+    <% } %>
+
+    <% if (usedPoints > 0) { %>
+      - <%= discountFromPoints.toLocaleString('vi-VN') %> ₫
+      (Sử dụng <%= usedPoints.toLocaleString('vi-VN') %> điểm)
+      <br>
+    <% } %>
+  </p>
+<% } %>
+
+<p>
+  <strong>Tổng thanh toán:
+    <%= order.totalAmount.toLocaleString('vi-VN') %> ₫
+  </strong>
+</p>
+
+<a href="/products" class="btn btn-primary">Tiếp tục mua sắm</a>
+<a href="/my-orders" class="btn btn-secondary">Xem đơn hàng của tôi</a>
+
+<%- include('../partials/footer') %>

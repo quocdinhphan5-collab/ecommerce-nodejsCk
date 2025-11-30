@@ -1,0 +1,81 @@
+<%- include('../partials/header') %>
+
+<h1 class="mt-3 mb-4">Chi tiết đơn hàng (Admin)</h1>
+
+<p>Mã đơn: <strong><%= order._id %></strong></p>
+<p>Khách hàng: <strong><%= (order.user && order.user.email) || order.email %></strong></p>
+<p>Địa chỉ giao: <strong><%= order.shippingAddress %></strong></p>
+<p>Ngày đặt: <strong><%= new Date(order.createdAt).toLocaleString('vi-VN') %></strong></p>
+
+<p>
+  Trạng thái hiện tại:
+  <span class="badge bg-info"><%= order.status %></span>
+</p>
+
+<% if (currentUser && currentUser.role === 'admin') { %>
+  <hr>
+  <h5>Chỉnh trạng thái đơn hàng</h5>
+
+  <form method="post" action="/admin/orders/<%= order._id %>/status" class="row g-2 mb-4">
+    <div class="col-auto">
+      <select name="status" class="form-select">
+        <option value="Pending"   <%= order.status === 'Pending'   ? 'selected' : '' %>>Đang chờ xử lý</option>
+        <option value="Confirmed" <%= order.status === 'Confirmed' ? 'selected' : '' %>>Đã xác nhận</option>
+        <option value="Shipping"  <%= order.status === 'Shipping'  ? 'selected' : '' %>>Đang giao</option>
+        <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Đã giao</option>
+        <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Đã hủy</option>
+      </select>
+    </div>
+    <div class="col-auto">
+      <button class="btn btn-primary">Cập nhật trạng thái</button>
+    </div>
+  </form>
+<% } %>
+
+<h4>Lịch sử trạng thái</h4>
+<table class="table table-sm">
+  <thead>
+    <tr>
+      <th>Trạng thái</th>
+      <th>Thời gian</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% order.history
+        .sort((a,b)=>b.updatedAt - a.updatedAt)
+        .forEach(h => { %>
+      <tr>
+        <td><%= h.status %></td>
+        <td><%= new Date(h.updatedAt).toLocaleString('vi-VN') %></td>
+      </tr>
+    <% }) %>
+  </tbody>
+</table>
+
+<h4>Sản phẩm</h4>
+<table class="table">
+  <thead>
+    <tr>
+      <th>Sản phẩm</th>
+      <th>Phiên bản</th>
+      <th>Giá</th>
+      <th>Số lượng</th>
+      <th>Thành tiền</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% order.items.forEach(it => { %>
+      <tr>
+        <td><%= it.name %></td>
+        <td><%= it.variantName || '-' %></td>
+        <td><%= it.price.toLocaleString('vi-VN') %> ₫</td>
+        <td><%= it.quantity %></td>
+        <td><%= (it.price * it.quantity).toLocaleString('vi-VN') %> ₫</td>
+      </tr>
+    <% }) %>
+  </tbody>
+</table>
+
+<p><strong>Tổng thanh toán: <%= order.totalAmount.toLocaleString('vi-VN') %> ₫</strong></p>
+
+<%- include('../partials/footer') %>
