@@ -21,9 +21,17 @@ async function getOrCreateUserCart(userId) {
 }
 
 // POST /cart/add
+// POST /cart/add
 async function addToCart(req, res) {
   try {
     const { productId, variantIndex, quantity } = req.body;
+
+    // LOG: xem client gửi gì lên
+    console.log('=== ADD TO CART BODY ===');
+    console.log('productId:', productId);
+    console.log('variantIndex (raw):', variantIndex);
+    console.log('quantity:', quantity);
+
     const qty = Math.max(1, parseInt(quantity || '1', 10));
 
     const product = await Product.findById(productId);
@@ -41,25 +49,83 @@ async function addToCart(req, res) {
       return res.redirect('back');
     }
 
-    const vIndex = Number.isInteger(parseInt(variantIndex, 10))
-      ? parseInt(variantIndex, 10)
-      : null;
+    // ===== XỬ LÝ variantIndex: mặc định 0 nếu có biến thể mà client không gửi =====
+    let vIndex = null;
+
+    if (typeof variantIndex === 'string' && variantIndex !== '') {
+      const parsed = Number(variantIndex);
+      if (!Number.isNaN(parsed) && parsed >= 0) {
+        vIndex = parsed;
+      }
+    } else {
+      // Không gửi variantIndex nhưng sản phẩm có variants → chọn biến thể đầu tiên
+      if (product.variants && product.variants.length > 0) {
+        vIndex = 0;
+      }
+    }
 
     const variant =
       vIndex != null && product.variants && product.variants[vIndex]
         ? product.variants[vIndex]
         : null;
 
+    console.log('Resolved vIndex:', vIndex);
+    console.log('Resolved variant:', variant ? variant.name : null);
+
     const price = variant ? variant.price : product.price;
     const variantName = variant ? variant.name : '';
 
-    let totalQty = 0;
+    // ====== KIỂM TRA TỒN KHO THEO BIẾN THỂ ======
+    let availableStock = null;
+    if (variant) {
+      availableStock = Number.isFinite(variant.stock)
+        ? Number(variant.stock)
+        : 0;
+    }
 
-    // Nếu user đã đăng nhập → lưu DB
+    let totalQtyInCart = 0; // số lượng hiện đang có trong giỏ cho sản phẩm + biến thể này
+
+    // Nếu user đã đăng nhập → giỏ DB
     if (req.session.user && req.session.user._id) {
       const userId = req.session.user._id;
       let cart = await getOrCreateUserCart(userId);
 
+      // Tính tổng số lượng hiện có trong giỏ cho cùng product + variantIndex
+      cart.items.forEach((it) => {
+        if (
+          it.product.toString() === productId &&
+          String(it.variantIndex ?? '') === String(vIndex ?? '')
+        ) {
+          totalQtyInCart += it.quantity;
+        }
+      });
+
+      // Nếu có khai báo tồn kho cho biến thể → kiểm tra
+      if (variant && availableStock !== null) {
+        if (totalQtyInCart + qty > availableStock) {
+          const isAjax =
+            req.xhr ||
+            (req.headers.accept &&
+              req.headers.accept.includes('application/json'));
+
+          const remain = Math.max(availableStock - totalQtyInCart, 0);
+
+          const message =
+            remain > 0
+              ? `Chỉ còn ${remain} sản phẩm cho biến thể này.`
+              : 'Biến thể này đã hết hàng.';
+
+          if (isAjax) {
+            return res.status(400).json({
+              success: false,
+              message,
+            });
+          }
+          return res.redirect('back');
+        }
+      }
+
+      // Qua được check kho → cập nhật giỏ
       const idx = cart.items.findIndex(
         (it) =>
           it.product.toString() === productId &&
@@ -83,9 +149,11 @@ async function addToCart(req, res) {
       cart.updatedAt = new Date();
       await cart.save();
 
+      // đồng bộ session
       req.session.cart = {
         items: cart.items.map((it) => ({
           productId: it.product.toString(),
+          variantIndex: it.variantIndex,
           name: it.name,
           variantName: it.variantName,
           price: it.price,
@@ -94,35 +162,85 @@ async function addToCart(req, res) {
         total: cart.total,
       };
 
-      totalQty = cart.items.reduce((sum, it) => sum + it.quantity, 0);
-    } else {
-      // Guest → chỉ lưu session
-      ensureSessionCart(req);
-      const idx = req.session.cart.items.findIndex(
-        (it) =>
-          it.productId === productId &&
-          String(it.variantIndex ?? '') === String(vIndex ?? '')
-      );
+      const totalQty = cart.items.reduce((sum, it) => sum + it.quantity, 0);
 
-      if (idx >= 0) {
-        req.session.cart.items[idx].quantity += qty;
-      } else {
-        req.session.cart.items.push({
-          productId,
-          variantIndex: vIndex,
-          name: product.name,
-          variantName,
-          price,
-          quantity: qty,
+      const isAjax =
+        req.xhr ||
+        (req.headers.accept && req.headers.accept.includes('application/json'));
+
+      if (isAjax) {
+        return res.json({
+          success: true,
+          message: 'Đã thêm sản phẩm vào giỏ hàng',
+          cartQty: totalQty,
         });
       }
-      recalcSessionCart(req.session.cart);
 
-      totalQty = req.session.cart.items.reduce(
-        (sum, it) => sum + it.quantity,
-        0
-      );
+      return res.redirect('back');
     }
+
+    // ====== GUEST → GIỎ TRONG SESSION ======
+    ensureSessionCart(req);
+
+    // Tính tổng số lượng hiện có trong giỏ cho biến thể này (session)
+    req.session.cart.items.forEach((it) => {
+      if (
+        it.productId === productId &&
+        String(it.variantIndex ?? '') === String(vIndex ?? '')
+      ) {
+        totalQtyInCart += it.quantity;
+      }
+    });
+
+    if (variant && availableStock !== null) {
+      if (totalQtyInCart + qty > availableStock) {
+        const isAjax =
+          req.xhr ||
+          (req.headers.accept && req.headers.accept.includes('application/json'));
+
+        const remain = Math.max(availableStock - totalQtyInCart, 0);
+
+        const message =
+          remain > 0
+            ? `Chỉ còn ${remain} sản phẩm cho biến thể này.`
+            : 'Biến thể này đã hết hàng.';
+
+        if (isAjax) {
+          return res.status(400).json({
+            success: false,
+            message,
+          });
+        }
+        return res.redirect('back');
+      }
+    }
+
+    // Qua được check kho → cập nhật giỏ session
+    const idx = req.session.cart.items.findIndex(
+      (it) =>
+        it.productId === productId &&
+        String(it.variantIndex ?? '') === String(vIndex ?? '')
+    );
+
+    if (idx >= 0) {
+      req.session.cart.items[idx].quantity += qty;
+    } else {
+      req.session.cart.items.push({
+        productId,
+        variantIndex: vIndex,
+        name: product.name,
+        variantName,
+        price,
+        quantity: qty,
+      });
+    }
+
+    recalcSessionCart(req.session.cart);
+
+    const totalQty = req.session.cart.items.reduce(
+      (sum, it) => sum + it.quantity,
+      0
+    );
 
     const isAjax =
       req.xhr ||
@@ -163,7 +281,6 @@ async function viewCart(req, res) {
       const userId = req.session.user._id;
       let cart = await Cart.findOne({ user: userId });
 
-      // Nếu trong session có giỏ nhưng DB chưa có, có thể merge lần đầu
       if (!cart) {
         cart = new Cart({ user: userId, items: [], total: 0 });
       }
@@ -174,6 +291,7 @@ async function viewCart(req, res) {
       const viewCart = {
         items: cart.items.map((it) => ({
           productId: it.product.toString(),
+          variantIndex: it.variantIndex,
           name: it.name,
           variantName: it.variantName,
           price: it.price,
@@ -239,6 +357,7 @@ async function updateCart(req, res) {
       req.session.cart = {
         items: cart.items.map((it) => ({
           productId: it.product.toString(),
+          variantIndex: it.variantIndex,
           name: it.name,
           variantName: it.variantName,
           price: it.price,

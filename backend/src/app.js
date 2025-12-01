@@ -21,7 +21,9 @@ const orderRoutes = require('./routes/order');
 const adminRoutes = require('./routes/admin');
 const app = express();
 const server = http.createServer(app);
+app.use(express.static(path.join(__dirname, 'public')));
 const io = new Server(server);
+const addressRoutes = require("./routes/address");
 
 app.set('io', io);
 
@@ -32,7 +34,7 @@ const MONGO_URL = process.env.MONGO_URL || 'mongodb://mongo:27017/ecommerce_db';
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.use("/address", addressRoutes);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
@@ -146,6 +148,27 @@ async function seed() {
           { status: 'Pending',   updatedAt: new Date() },
         ],
       });
+
+      // Trừ tồn kho theo từng biến thể
+      for (const item of orderItems) {
+        try {
+          if (item.product && typeof item.variantIndex === 'number') {
+            await Product.updateOne(
+              {
+                _id: item.product,
+                [`variants.${item.variantIndex}.stock`]: { $gte: item.quantity },
+              },
+              {
+                $inc: {
+                  [`variants.${item.variantIndex}.stock`]: -item.quantity,
+                },
+              }
+            );
+          }
+        } catch (e) {
+          console.error('Lỗi trừ tồn kho cho item', item, e);
+        }
+      }
 
       admin.loyaltyPoints += Math.floor(order.totalAmount * 0.0001);
       await admin.save();

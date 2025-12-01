@@ -2,6 +2,8 @@ const Order = require('../models/Order');
 const DiscountCode = require('../models/DiscountCode');
 const User = require('../models/User');
 const Cart = require('../models/Cart');
+const Product = require('../models/Product');
+const { sendOrderConfirmationMail } = require('../utils/mailer');
 
 function ensureCart(req) {
   if (!req.session.cart) {
@@ -9,6 +11,10 @@ function ensureCart(req) {
   }
 }
 
+/**
+ * GET /checkout
+ * Hiển thị trang thanh toán
+ */
 async function viewCheckout(req, res) {
   try {
     ensureCart(req);
@@ -18,12 +24,20 @@ async function viewCheckout(req, res) {
 
     let user = null;
     if (req.session.user) {
-      // Lấy user đầy đủ từ DB để có addresses, loyaltyPoints,...
       user = await User.findById(req.session.user._id);
-      if (user && !Array.isArray(user.addresses)) {
-        user.addresses = [];
+      if (user) {
+        if (!Array.isArray(user.addresses)) {
+          user.addresses = [];
+        }
+
+        if (user.addresses.length > 5) {
+          user.addresses = user.addresses.slice(0, 5);
+          await user.save();
+        }
       }
     }
+
+    res.locals.currentUser = user || null;
 
     res.render('pages/checkout', {
       title: 'Thanh toán',
@@ -38,6 +52,10 @@ async function viewCheckout(req, res) {
   }
 }
 
+/**
+ * POST /checkout
+ * Xử lý đặt hàng
+ */
 async function postCheckout(req, res) {
   ensureCart(req);
   if (!req.session.cart.items.length) {
@@ -45,10 +63,21 @@ async function postCheckout(req, res) {
   }
 
   try {
-    const { fullName, email, address, discountCode, usePoints, savedAddressId } = req.body;
+    const {
+      fullName,
+      email,
+      shippingAddress, 
+      new_addressLine,
+      new_province,
+      new_district,
+      new_ward,
+      discountCode,
+      usePoints,
+    } = req.body;
+
     let user = null;
 
-    // 1. Lấy user nếu đã đăng nhập
+    // 1. Lấy user từ session nếu có
     if (req.session.user) {
       user = await User.findById(req.session.user._id);
       if (!user) {
@@ -56,7 +85,7 @@ async function postCheckout(req, res) {
       }
     }
 
-    // 2. Nếu chưa có user -> tạo mới theo email
+    // 2. Nếu chưa có user -> tìm theo email -> nếu chưa có nữa thì tạo
     if (!user) {
       user = await User.findOne({ email });
       if (!user) {
@@ -65,10 +94,10 @@ async function postCheckout(req, res) {
           fullName,
           email,
           password: randomPass,
-          address,
         });
         await user.save();
       }
+
       req.session.user = {
         _id: user._id,
         fullName: user.fullName,
@@ -77,11 +106,8 @@ async function postCheckout(req, res) {
         loyaltyPoints: user.loyaltyPoints,
       };
     } else {
-      // cập nhật lại tên / địa chỉ cho user
+      // Cập nhật lại tên theo form
       user.fullName = fullName;
-      if (address && address.trim()) {
-        user.address = address.trim();
-      }
       await user.save();
       req.session.user.fullName = fullName;
     }
@@ -90,27 +116,58 @@ async function postCheckout(req, res) {
       user.addresses = [];
     }
 
-    // 3. Xác định shippingAddress
-    let shippingAddress = address && address.trim ? address.trim() : '';
+    // 3. Xác định địa chỉ giao hàng dạng text
+    let shippingAddressText = '';
 
-    if (!shippingAddress && savedAddressId && user.addresses.length > 0) {
-      const selected = user.addresses.id(savedAddressId);
-      if (selected) {
-        shippingAddress =
-          `${selected.fullName} - ${selected.phone} - ` +
-          `${selected.street}, ${selected.ward}, ${selected.district}, ${selected.province}`;
+    // 3.1 Chọn 1 địa chỉ đã lưu
+    if (
+      shippingAddress &&
+      shippingAddress !== 'new' &&
+      user.addresses.length > 0
+    ) {
+      const index = parseInt(shippingAddress, 10);
+      if (!Number.isNaN(index) && user.addresses[index]) {
+        const addr = user.addresses[index];
+        shippingAddressText = `${addr.addressLine}, ${addr.ward}, ${addr.district}, ${addr.province}`;
       }
     }
 
-    if (!shippingAddress) {
-      shippingAddress = user.address || '';
+    // 3.2 Nếu vẫn chưa có, dùng địa chỉ mới
+    if (!shippingAddressText) {
+      if (
+        !new_addressLine ||
+        !new_province ||
+        !new_district ||
+        !new_ward
+      ) {
+        return res.status(400).send('Thiếu thông tin địa chỉ giao hàng mới');
+      }
+
+      shippingAddressText = `${new_addressLine}, ${new_ward}, ${new_district}, ${new_province}`;
+
+      // Lưu thêm địa chỉ nếu chưa vượt quá 5
+      if (user.addresses.length < 5) {
+        user.addresses.push({
+          fullName: fullName,
+          phone: user.phone || '',
+          addressLine: new_addressLine,
+          ward: new_ward,
+          district: new_district,
+          province: new_province,
+          isDefault: user.addresses.length === 0,
+        });
+        await user.save();
+        req.session.user.loyaltyPoints = user.loyaltyPoints;
+      } else {
+        console.log('User đã có tối đa 5 địa chỉ, không lưu thêm.');
+      }
     }
 
-    if (!shippingAddress.trim()) {
+    if (!shippingAddressText.trim()) {
       return res.status(400).send('Thiếu địa chỉ giao hàng');
     }
 
-    // 4. Mã giảm giá
+    // 4. Xử lý mã giảm giá
     let discountDoc = null;
     let discountValue = 0;
     if (discountCode) {
@@ -123,19 +180,19 @@ async function postCheckout(req, res) {
       }
     }
 
-    // 5. Điểm thưởng: 1 điểm = 1.000 VND
+    // 5. Tính toán tiền
     const cart = req.session.cart;
-    const subtotal = cart.total || 0;                
-    const tax = Math.round(subtotal * 0.1);          
+    const subtotal = cart.total || 0;
+    const tax = Math.round(subtotal * 0.1); // VAT 10%
     const shippingFee = subtotal >= 2000000 ? 0 : 50000;
-    const totalBefore = subtotal + tax + shippingFee; 
+    const totalBefore = subtotal + tax + shippingFee;
 
-    let usedPoints = 0;        
-    let usedPointsValue = 0;   
+    let usedPoints = 0;
+    let usedPointsValue = 0;
 
     if (usePoints && user.loyaltyPoints > 0) {
-      usedPoints = user.loyaltyPoints;         
-      usedPointsValue = usedPoints * 1000;     
+      usedPoints = user.loyaltyPoints;
+      usedPointsValue = usedPoints * 1000;
 
       const maxDiscountFromPoints = Math.max(0, totalBefore - discountValue);
       if (usedPointsValue > maxDiscountFromPoints) {
@@ -151,39 +208,61 @@ async function postCheckout(req, res) {
     const order = new Order({
       user: user._id,
       email: user.email,
-      shippingAddress,
+      shippingAddress: shippingAddressText,
       items: cart.items.map((it) => ({
         product: it.productId,
         name: it.name,
         variantName: it.variantName,
+        variantIndex: it.variantIndex,
         price: it.price,
         quantity: it.quantity,
       })),
       totalAmount: total,
       discountCode: discountDoc ? discountDoc._id : null,
       discountValue,
-      usedLoyaltyPoints: usedPoints, 
+      usedLoyaltyPoints: usedPoints,
       status: 'Pending',
       history: [{ status: 'Pending', updatedAt: new Date() }],
     });
 
     await order.save();
 
+    // 7. Cập nhật usage mã giảm giá
     if (discountDoc && discountValue > 0) {
       discountDoc.usageCount += 1;
       await discountDoc.save();
     }
 
-    // 7. Cập nhật điểm thưởng:
-    // chương trình: KH được tích 10% giá trị đơn hàng dưới dạng điểm,
-    // 1 điểm = 1000 VND -> subtotal * 10% / 1000
+    // 8. Cập nhật điểm thưởng
     const earnPoints = Math.floor((subtotal * 0.1) / 1000);
-
-    user.loyaltyPoints = Math.max(0, user.loyaltyPoints - usedPoints + earnPoints);
+    user.loyaltyPoints = Math.max(
+      0,
+      user.loyaltyPoints - usedPoints + earnPoints
+    );
     await user.save();
     req.session.user.loyaltyPoints = user.loyaltyPoints;
 
-    // 8. Xóa giỏ hàng
+    // 9. Gửi email xác nhận đơn hàng (KHÔNG để fail mail làm hỏng checkout)
+    try {
+      await sendOrderConfirmationMail({
+        to: user.email,
+        user,
+        order,
+        breakdown: {
+          subtotal,
+          tax,
+          shippingFee,
+          discountValue,
+          usedPointsValue,
+          totalBefore,
+          total,
+        },
+      });
+    } catch (mailErr) {
+      console.error('Gửi email xác nhận đơn hàng lỗi:', mailErr);
+    }
+
+    // 10. Xóa giỏ hàng
     if (req.session.user && req.session.user._id) {
       await Cart.deleteOne({ user: req.session.user._id });
     }
@@ -191,6 +270,7 @@ async function postCheckout(req, res) {
     delete req.session.appliedDiscount;
     delete req.session.usedPoints;
 
+    // 11. Redirect sang trang chi tiết đơn hàng (order-success hiển thị chi tiết)
     return res.redirect(`/order-success/${order._id}`);
   } catch (err) {
     console.error('Lỗi khi checkout:', err);
@@ -199,6 +279,9 @@ async function postCheckout(req, res) {
 }
 
 
+/**
+ * GET /order-success/:id
+ */
 async function viewOrderSuccess(req, res) {
   try {
     const order = await Order.findById(req.params.id).populate('user');
@@ -210,9 +293,14 @@ async function viewOrderSuccess(req, res) {
   }
 }
 
+/**
+ * GET /my-orders
+ */
 async function viewMyOrders(req, res) {
   try {
-    const orders = await Order.find({ user: req.session.user._id }).sort({ createdAt: -1 });
+    const orders = await Order.find({ user: req.session.user._id }).sort({
+      createdAt: -1,
+    });
     res.render('pages/orders', { title: 'Đơn hàng của tôi', orders });
   } catch (err) {
     console.error(err);
@@ -220,6 +308,9 @@ async function viewMyOrders(req, res) {
   }
 }
 
+/**
+ * GET /my-orders/:id
+ */
 async function viewMyOrderDetail(req, res) {
   try {
     const order = await Order.findOne({
@@ -234,6 +325,10 @@ async function viewMyOrderDetail(req, res) {
   }
 }
 
+/**
+ * POST /checkout/apply-discount
+ * Ajax áp mã giảm giá
+ */
 async function applyDiscount(req, res) {
   try {
     ensureCart(req);
@@ -275,7 +370,7 @@ async function applyDiscount(req, res) {
     let discountValue = discountDoc.discountValue || 0;
     if (discountValue > subtotal) discountValue = subtotal;
 
-    const tax = Math.round(subtotal * 0.1);             
+    const tax = Math.round(subtotal * 0.1); // VAT 10%
     const shippingFee = subtotal >= 2000000 ? 0 : 50000; // freeship từ 2tr
     const totalBefore = subtotal + tax + shippingFee;
     const grandTotal = Math.max(0, totalBefore - discountValue);
@@ -302,6 +397,176 @@ async function applyDiscount(req, res) {
   }
 }
 
+// XÓA 1 địa chỉ giao hàng theo index
+async function deleteShippingAddress(req, res) {
+  try {
+    if (!req.session.user) return res.redirect('/login');
+
+    const index = parseInt(req.params.index, 10);
+    const user = await User.findById(req.session.user._id);
+
+    if (!user || !Array.isArray(user.addresses) || !user.addresses[index]) {
+      return res.redirect('/checkout');
+    }
+
+    user.addresses.splice(index, 1);
+
+    if (user.addresses.length > 0 && !user.addresses.some(a => a.isDefault)) {
+      user.addresses[0].isDefault = true;
+    }
+
+    await user.save();
+    return res.redirect('/checkout');
+  } catch (err) {
+    console.error('Lỗi deleteShippingAddress:', err);
+    return res.status(500).send('Lỗi server khi xoá địa chỉ');
+  }
+}
+
+// CẬP NHẬT (SỬA) 1 địa chỉ giao hàng theo index
+async function updateShippingAddress(req, res) {
+  try {
+    if (!req.session.user) return res.redirect('/login');
+
+    const index = parseInt(req.params.index, 10);
+    const user = await User.findById(req.session.user._id);
+
+    if (!user || !Array.isArray(user.addresses) || !user.addresses[index]) {
+      return res.redirect('/checkout');
+    }
+
+    const addr = user.addresses[index];
+    const { fullName, phone, addressLine, ward, district, province, isDefault } = req.body;
+
+    addr.fullName = fullName;
+    addr.phone = phone;
+    addr.addressLine = addressLine;
+    addr.ward = ward;
+    addr.district = district;
+    addr.province = province;
+
+    if (isDefault === 'on') {
+      user.addresses.forEach((a, i) => {
+        a.isDefault = i === index;
+      });
+    }
+
+    await user.save();
+    return res.redirect('/checkout');
+  } catch (err) {
+    console.error('Lỗi updateShippingAddress:', err);
+    return res.status(500).send('Lỗi server khi sửa địa chỉ');
+  }
+}
+
+// POST /checkout/address/add
+async function createShippingAddress(req, res) {
+  try {
+    if (!req.session.user) return res.redirect('/login');
+
+    const user = await User.findById(req.session.user._id);
+    if (!user) return res.redirect('/checkout');
+
+    if (!Array.isArray(user.addresses)) {
+      user.addresses = [];
+    }
+
+    if (user.addresses.length >= 5) {
+      return res.redirect('/checkout');
+    }
+
+    const { fullName, phone, addressLine, province, district, ward, isDefault } = req.body;
+
+    if (!fullName || !addressLine || !province || !district || !ward) {
+      return res.redirect('/checkout');
+    }
+
+    const newAddr = {
+      fullName,
+      phone: phone || '',
+      addressLine,
+      province,
+      district,
+      ward,
+      isDefault: false,
+    };
+
+    if (isDefault === 'on' || user.addresses.length === 0) {
+      user.addresses.forEach(a => (a.isDefault = false));
+      newAddr.isDefault = true;
+    }
+
+    user.addresses.push(newAddr);
+    await user.save();
+
+    return res.redirect('/checkout');
+  } catch (err) {
+    console.error('Lỗi createShippingAddress:', err);
+    return res.status(500).send('Lỗi server khi thêm địa chỉ');
+  }
+}
+
+// GET /order-lookup
+async function viewOrderLookup(req, res) {
+  if (req.session.user && req.session.user._id) {
+    return res.redirect('/my-orders');
+  }
+
+  res.render('pages/order-lookup', {
+    title: 'Lịch sử giao dịch',
+    orders: null,
+    query: { phone: '', orderId: '' },
+    error: null,
+  });
+}
+
+// POST /order-lookup
+async function handleOrderLookup(req, res) {
+  try {
+    const { phone, orderId } = req.body;
+    const qPhone = (phone || '').trim();
+    const qId = (orderId || '').trim();
+
+    if (!qPhone) {
+      return res.render('pages/order-lookup', {
+        title: 'Lịch sử giao dịch',
+        orders: [],
+        query: { phone: qPhone, orderId: qId },
+        error: 'Vui lòng nhập số điện thoại để tra cứu.',
+      });
+    }
+
+    const filter = { phone: qPhone };
+    if (qId) {
+      filter._id = qId;
+    }
+
+    const orders = await Order.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(20);
+
+    let error = null;
+    if (!orders.length) {
+      error = 'Không tìm thấy giao dịch nào với thông tin đã nhập.';
+    }
+
+    res.render('pages/order-lookup', {
+      title: 'Lịch sử giao dịch',
+      orders,
+      query: { phone: qPhone, orderId: qId },
+      error,
+    });
+  } catch (err) {
+    console.error('Lỗi tra cứu đơn hàng:', err);
+    res.render('pages/order-lookup', {
+      title: 'Lịch sử giao dịch',
+      orders: [],
+      query: { phone: req.body.phone || '', orderId: req.body.orderId || '' },
+      error: 'Có lỗi xảy ra, vui lòng thử lại sau.',
+    });
+  }
+}
+
 module.exports = {
   viewCheckout,
   postCheckout,
@@ -309,4 +574,9 @@ module.exports = {
   viewMyOrders,
   viewMyOrderDetail,
   applyDiscount,
+  deleteShippingAddress,
+  updateShippingAddress,
+  createShippingAddress,
+  viewOrderLookup,
+  handleOrderLookup,
 };

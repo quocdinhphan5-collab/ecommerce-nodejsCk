@@ -2,6 +2,7 @@ const Product = require('../models/Product');
 const Order = require('../models/Order');
 const DiscountCode = require('../models/DiscountCode');
 const User = require('../models/User');
+const Category = require('../models/Category');
 
 // DASHBOARD
 async function dashboard(req, res) {
@@ -63,19 +64,28 @@ async function dashboard(req, res) {
 // QUẢN LÝ SẢN PHẨM
 async function listProducts(req, res) {
   try {
-    const { q, category } = req.query;
+    const { q, category } = req.query || {};
+
     const filter = {};
+
     if (q && q.trim()) {
       const regex = new RegExp(q.trim(), 'i');
       filter.$or = [{ name: regex }, { description: regex }];
     }
+
     if (category && category.trim()) {
       filter.category = category.trim();
     }
-    const products = await Product.find(filter).sort({ createdAt: -1 });
-    res.render('admin/products', {
+
+    const [products, categories] = await Promise.all([
+      Product.find(filter).sort({ createdAt: -1 }),
+      Category.find({ isActive: true }).sort({ name: 1 }),
+    ]);
+
+    return res.render('admin/products', {
       title: 'Quản lý sản phẩm',
       products,
+      categories,
       query: {
         q: q || '',
         category: category || '',
@@ -83,7 +93,7 @@ async function listProducts(req, res) {
     });
   } catch (err) {
     console.error('Lỗi listProducts:', err);
-    res.status(500).send('Lỗi server');
+    return res.status(500).send('Lỗi server: ' + err.message);
   }
 }
 
@@ -94,44 +104,98 @@ async function getProductForm(req, res) {
     if (id) {
       product = await Product.findById(id);
     }
+
+    const categories = await Category.find({ isActive: true }).sort({ name: 1 });
+
     res.render('admin/product-form', {
       title: product ? 'Sửa sản phẩm' : 'Thêm sản phẩm',
       product,
+      categories,
     });
   } catch (err) {
     console.error('Lỗi getProductForm:', err);
-    res.status(500).send('Lỗi server');
+    return res.status(500).send('Lỗi server: ' + err.message);
   }
 }
 
 async function postProduct(req, res) {
   try {
-    const {
-      id,
-      name,
-      description,
-      price,
-      category,
-      imageUrl,
-      stock,
-    } = req.body;
-    const base = {
-      name: (name || '').trim(),
-      description: description || '',
-      price: Number(price) || 0,
-      category: (category || '').trim(),
-      imageUrl: imageUrl || '',
-      stock: Number(stock) || 0,
-    };
-    if (id) {
-      await Product.findByIdAndUpdate(id, base);
-    } else {
-      await Product.create(base);
+    const { id, name, brand, category, price, description } = req.body;
+
+    const images = (req.body.images || '')
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    // Parse biến thể từ form: variants[index][name|price|stock]
+    let variants = [];
+    if (req.body.variants) {
+      const raw = req.body.variants; // là object
+      variants = Object.values(raw)
+        .filter((v) => v.name && v.name.trim())
+        .map((v) => ({
+          name: v.name.trim(),
+          price: Number(v.price) || 0,
+          stock: Number(v.stock) || 0,
+        }));
     }
-    res.redirect('/admin/products');
+
+    // ✅ Kiểm tra mô tả: ít nhất 5 dòng có nội dung
+    const desc = (description || '').trim();
+    const lineCount = desc
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l !== '').length;
+
+    if (lineCount < 5) {
+      const categories = await Category.find({ isActive: true }).sort({
+        name: 1,
+      });
+
+      // Dựng lại object product để fill form
+      const productObj = {
+        _id: id,
+        name,
+        brand,
+        category,
+        price: Number(price) || 0,
+        description,
+        images,
+        variants,
+        isNew: !!req.body.isNew,
+        isBestSeller: !!req.body.isBestSeller,
+      };
+
+      return res.status(400).render('admin/product-form', {
+        title: id ? 'Sửa sản phẩm' : 'Thêm sản phẩm',
+        product: productObj,
+        categories,
+        error: 'Mô tả sản phẩm phải có ít nhất 5 dòng nội dung.',
+      });
+    }
+
+    const data = {
+      name,
+      brand,
+      category, // slug
+      price: Number(price) || 0,
+      description,
+      images,
+      variants,
+      isNew: !!req.body.isNew,
+      isBestSeller: !!req.body.isBestSeller,
+    };
+
+    if (id) {
+      await Product.findByIdAndUpdate(id, data);
+    } else {
+      await Product.create(data);
+    }
+
+    return res.redirect('/admin/products');
   } catch (err) {
     console.error('Lỗi postProduct:', err);
-    res.status(500).send('Lỗi server');
+    return res.status(500).send('Lỗi server: ' + err.message);
   }
 }
 

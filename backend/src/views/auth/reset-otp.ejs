@@ -1,62 +1,94 @@
+<link rel="stylesheet" href="/css/auth.css">
+
 <%- include('../partials/header', { title: 'Nhập mã xác nhận' }) %>
 
 <div class="container py-4 d-flex justify-content-center">
   <div class="col-md-6 col-lg-5">
     <div class="card border-0 shadow-sm mb-3">
       <div class="card-body">
-        <h1 class="h4 mb-3 text-primary fw-bold">🔐 Nhập mã xác nhận</h1>
+        <h1 class="h4 mb-3 text-primary fw-bold">🔐 Xác minh mã OTP</h1>
 
-        <% if (typeof error !== 'undefined' && error) { %>
+        <% if (error) { %>
           <div class="alert alert-danger"><%= error %></div>
         <% } %>
-        <% if (typeof message !== 'undefined' && message) { %>
+        <% if (message) { %>
           <div class="alert alert-success"><%= message %></div>
         <% } %>
 
-        <!-- Form xác nhận OTP -->
+        <!-- FORM OTP -->
         <form method="post" action="/new-password" class="mb-3">
-          <div class="mb-3">
-            <label class="form-label">Email</label>
-            <!-- Hiển thị cho người dùng -->
-            <input
-              type="email"
-              class="form-control"
-              value="<%= email %>"
-              placeholder="Email đã nhận mã"
-              readonly
-            >
-            <!-- Ẩn, dùng để gửi lên server -->
-            <input type="hidden" name="email" value="<%= email %>">
-          </div>
+          <input type="hidden" name="email" value="<%= email %>">
 
-          <div class="mb-3">
-            <label class="form-label">Mã xác nhận (OTP)</label>
-            <input
-              type="text"
-              name="code"
-              class="form-control"
-              placeholder="Nhập mã 6 số"
-              required
-            >
-          </div>
+          <label class="form-label">Nhập mã OTP</label>
+          <input
+            type="text"
+            name="code"
+            class="form-control otp-input"
+            maxlength="6"
+            placeholder="Nhập mã 6 số"
+            required
+          >
 
-          <button class="btn btn-primary w-100">Xác nhận</button>
+          <button class="btn btn-primary w-100 mt-3">Xác nhận</button>
         </form>
 
-        <!-- Form gửi lại mã -->
+        <!-- FORM gửi lại mã -->
         <form method="post" action="/new-password/resend">
           <input type="hidden" name="email" value="<%= email %>">
-          <button class="btn btn-outline-secondary w-100">
-            Gửi lại mã nếu chưa nhận được
+
+          <!-- KHÔNG disabled và KHÔNG đếm ngược khi mới load -->
+          <button id="resendBtn" class="btn btn-outline-secondary w-100">
+            Gửi lại mã
           </button>
         </form>
 
-        <p class="mt-3 small mb-0">
-          Quay lại <a href="/forgot-password">trang quên mật khẩu</a>
+        <p class="mt-3 text-center small">
+          <a href="/forgot-password">Quay lại trang quên mật khẩu</a>
         </p>
+
       </div>
     </div>
   </div>
 </div>
+
+<script>
+  (function () {
+    const COOLDOWN = 60; // 60s = 1 phút. Nếu muốn 30s thì đổi thành 30.
+    const resendBtn = document.getElementById('resendBtn');
+    if (!resendBtn) return;
+
+    let remaining = 0;
+    let timerId = null;
+
+    function startCountdown() {
+      remaining = COOLDOWN;
+      resendBtn.disabled = true;
+      resendBtn.textContent = `Gửi lại mã (${remaining}s)`;
+
+      timerId = setInterval(() => {
+        remaining -= 1;
+        if (remaining > 0) {
+          resendBtn.textContent = `Gửi lại mã (${remaining}s)`;
+        } else {
+          clearInterval(timerId);
+          timerId = null;
+          resendBtn.disabled = false;
+          resendBtn.textContent = 'Gửi lại mã';
+        }
+      }, 1000);
+    }
+
+    // Chỉ khi bấm nút mới bắt đầu đếm ngược
+    resendBtn.addEventListener('click', function (e) {
+      // Nếu đang đếm rồi thì chặn không cho submit tiếp
+      if (timerId) {
+        e.preventDefault();
+        return;
+      }
+      // Bắt đầu đếm ngược và vẫn cho form submit để gửi mail
+      startCountdown();
+    });
+  })();
+</script>
 
 <%- include('../partials/footer') %>

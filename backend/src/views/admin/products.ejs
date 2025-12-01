@@ -3,7 +3,9 @@
 <h1>Quản lý sản phẩm</h1>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
+  <!-- Form lọc -->
   <form class="d-flex" method="get" action="/admin/products">
+    <!-- Tìm theo tên -->
     <input
       type="text"
       name="q"
@@ -11,49 +13,80 @@
       placeholder="Tìm theo tên"
       value="<%= (query && query.q) || '' %>"
     >
-    <input
-      type="text"
+
+    <!-- Dropdown danh mục -->
+    <select
       name="category"
-      class="form-control me-2"
-      placeholder="Danh mục"
-      value="<%= (query && query.category) || '' %>"
+      class="form-select me-2"
+      style="max-width: 220px"
     >
-    <button class="btn btn-outline-primary">Lọc</button>
+      <option value="">Danh mục</option>
+      <% (categories || []).forEach(function(cat) { %>
+        <option
+          value="<%= cat.slug %>"
+          <%= (query && query.category === cat.slug) ? 'selected' : '' %>
+        >
+          <%= cat.name %>
+        </option>
+      <% }) %>
+    </select>
+
+    <button class="btn btn-primary">Lọc</button>
   </form>
 
-  <a href="/admin/products/new" class="btn btn-primary">
-    Thêm sản phẩm
-  </a>
+  <!-- Nút quản lý danh mục + thêm sản phẩm -->
+  <div class="btn-group">
+    <a href="/admin/categories" class="btn btn-outline-secondary">
+      Quản lý danh mục
+    </a>
+    <a href="/admin/products/new" class="btn btn-primary">
+      Thêm sản phẩm
+    </a>
+  </div>
 </div>
 
-<table class="table table-striped">
+<table class="table table-striped align-middle">
   <thead>
     <tr>
       <th>Tên sản phẩm</th>
       <th>Danh mục</th>
-      <th>Giá (₫)</th>
+      <th>Giá (đ)</th>
       <th>Tồn kho</th>
       <th>Ngày tạo</th>
       <th class="text-end">Thao tác</th>
     </tr>
   </thead>
   <tbody>
-    <% if (!products || !products.length) { %>
+    <% if (!products || products.length === 0) { %>
       <tr>
-        <td colspan="6" class="text-center">Chưa có sản phẩm</td>
+        <td colspan="6" class="text-center text-muted">
+          Không có sản phẩm nào.
+        </td>
       </tr>
     <% } else { %>
-      <% products.forEach(function (p) { %>
+      <% products.forEach(function(p) { %>
         <tr>
           <td><%= p.name %></td>
-          <td><%= p.category || '-' %></td>
+          <td><%= p.category || '' %></td>
           <td><%= (p.price || 0).toLocaleString('vi-VN') %></td>
-          <td><%= (p.stock != null ? p.stock : 0) %></td>
+
+          <!-- Tồn kho = tổng stock các biến thể -->
+          <td>
+            <%
+              let totalStock = 0;
+              if (p.variants && p.variants.length) {
+                p.variants.forEach(v => { totalStock += (v.stock || 0); });
+              }
+            %>
+            <%= totalStock %>
+          </td>
+
           <td>
             <%= p.createdAt
-                  ? p.createdAt.toLocaleDateString('vi-VN')
-                  : '' %>
+              ? new Date(p.createdAt).toLocaleString('vi-VN')
+              : '' %>
           </td>
+
           <td class="text-end">
             <a
               href="/admin/products/<%= p._id %>/edit"

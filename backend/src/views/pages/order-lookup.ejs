@@ -1,0 +1,84 @@
+<%- include('../partials/header') %>
+
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+          <h1 class="h4 mb-3 fw-bold text-primary">Lịch sử giao dịch</h1>
+          <p class="text-muted mb-3">
+            Nhập <strong>số điện thoại</strong> dùng khi đặt hàng để tra cứu đơn.
+          </p>
+
+          <% if (error) { %>
+            <div class="alert alert-warning"><%= error %></div>
+          <% } %>
+
+          <form method="post" action="/order-lookup" class="mb-3">
+            <div class="mb-3">
+              <label class="form-label">Số điện thoại</label>
+              <input
+                type="text"
+                name="phone"
+                class="form-control"
+                value="<%= (query && query.phone) || '' %>"
+                placeholder="VD: 0901234567"
+                required
+              >
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Mã đơn hàng (tuỳ chọn)</label>
+              <input
+                type="text"
+                name="orderId"
+                class="form-control"
+                value="<%= (query && query.orderId) || '' %>"
+                placeholder="Nhập mã đơn nếu bạn có"
+              >
+            </div>
+
+            <button class="btn btn-primary w-100">
+              Tra cứu
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <% if (orders && orders.length) { %>
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <h2 class="h5 mb-3">Kết quả</h2>
+
+            <div class="table-responsive">
+              <table class="table align-middle">
+                <thead>
+                  <tr>
+                    <th>Mã đơn</th>
+                    <th>Ngày</th>
+                    <th>Địa chỉ</th>
+                    <th>Tổng tiền</th>
+                    <th>Trạng thái</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% orders.forEach(o => { %>
+                    <tr>
+                      <td><code><%= o._id %></code></td>
+                      <td><%= new Date(o.createdAt).toLocaleString('vi-VN') %></td>
+                      <td style="max-width: 260px;"><%= o.shippingAddress %></td>
+                      <td><%= (o.totalAmount || 0).toLocaleString('vi-VN') %> ₫</td>
+                      <td><span class="badge bg-secondary"><%= o.status %></span></td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,49 @@
+<%- include('../partials/header') %>
+
+<div class="container py-4">
+  <h1 class="mb-4">Quản lý danh mục</h1>
+
+  <form method="post" action="/admin/categories" class="row g-2 mb-4">
+    <div class="col-md-6">
+      <input
+        type="text"
+        name="name"
+        class="form-control"
+        placeholder="Tên danh mục (VD: Laptop, Màn hình...)"
+        required
+      >
+    </div>
+    <div class="col-md-3">
+      <button type="submit" class="btn btn-primary w-100">
+        Thêm danh mục
+      </button>
+    </div>
+  </form>
+
+  <table class="table table-striped align-middle">
+    <thead>
+      <tr>
+        <th>STT</th>
+        <th>Tên</th>
+        <th>Ngày tạo</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% categories.forEach((cat, idx) => { %>
+        <tr>
+          <td><%= idx + 1 %></td>
+          <td><%= cat.name %></td>
+          <td><%= cat.createdAt.toLocaleString('vi-VN') %></td>
+          <td class="text-end">
+            <form method="post" action="/admin/categories/<%= cat._id %>/delete" onsubmit="return confirm('Xóa danh mục?');">
+              <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('../partials/footer') %>

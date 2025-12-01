@@ -97,6 +97,12 @@
             <a class="nav-link" href="/admin">Quản trị</a>
           </li>
         <% } %>
+
+        <% if (!currentUser) { %>
+          <li class="nav-item">
+            <a class="nav-link" href="/order-lookup">Lịch sử giao dịch</a>
+          </li>
+        <% } %>
       </ul>
 
       <!-- Giỏ hàng -->

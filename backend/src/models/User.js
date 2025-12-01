@@ -24,10 +24,17 @@ const userSchema = new mongoose.Schema({
   address:  { type: String },
 
   // danh sách địa chỉ chi tiết
-  addresses: {
-    type: [addressSchema],
-    default: [],
-  },
+  addresses: [
+  {
+    fullName: String,
+    phone: String,
+    addressLine: String,
+    ward: String,
+    district: String,
+    province: String,
+    isDefault: { type: Boolean, default: false }
+  }
+],
 
   // điểm thưởng khách hàng thân thiết
   loyaltyPoints: { type: Number, default: 0 },

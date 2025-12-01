@@ -43,30 +43,73 @@
               </div>
             </div>
 
-            <div class="mb-3">
-              <label class="form-label">Địa chỉ giao hàng</label>
-              <textarea
-                name="address"
-                class="form-control"
-                rows="3"
-                placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"
-              ><%= (user && user.address) ? user.address : '' %></textarea>
-            </div>
+            <!-- Địa chỉ -->
+            <h4 class="h6 mt-3">Chọn địa chỉ giao hàng</h4>
 
-            <!-- Nếu có danh sách địa chỉ đã lưu -->
-            <% if (user && user.addresses && user.addresses.length > 0) { %>
-              <div class="mb-3">
-                <label class="form-label">Hoặc chọn địa chỉ đã lưu</label>
-                <select name="savedAddressId" class="form-select">
-                  <option value="">-- Không chọn --</option>
-                  <% user.addresses.forEach(function(addr) { %>
-                    <option value="<%= addr._id %>">
-                      <%= addr.fullName %> - <%= addr.phone %> - <%= addr.street %>, <%= addr.ward %>, <%= addr.district %>, <%= addr.province %>
-                    </option>
-                  <% }) %>
-                </select>
-                <div class="form-text">
-                  Nếu để trống ô địa chỉ phía trên, hệ thống sẽ dùng địa chỉ được chọn ở đây.
+            <%
+              const addrList = (user && user.addresses) ? user.addresses : [];
+            %>
+
+            <select name="shippingAddress" id="shippingAddressSelect" class="form-select mb-2">
+              <% if (addrList.length > 0) { %>
+                <% addrList.forEach((addr, i) => { %>
+                  <option value="<%= i %>" <%= addr.isDefault ? 'selected' : '' %>>
+                    <%= addr.fullName %> -
+                    <%= addr.addressLine %>, <%= addr.ward %>, <%= addr.district %>, <%= addr.province %>
+                  </option>
+                <% }) %>
+              <% } else { %>
+                <option value="" selected disabled>Chưa có địa chỉ, vui lòng nhập địa chỉ mới bên dưới</option>
+              <% } %>
+            </select>
+
+            <% if (addrList.length > 0) { %>
+              <button
+                type="button"
+                class="btn btn-outline-primary btn-sm mb-3"
+                data-bs-toggle="modal"
+                data-bs-target="#savedAddressModal">
+                Quản lý địa chỉ đã lưu
+              </button>
+            <% } %>
+
+            <% if (addrList.length === 0) { %>
+              <!-- KHI CHƯA CÓ ĐỊA CHỈ NÀO: HIỂN THỊ LUÔN FORM ĐỊA CHỈ MỚI -->
+              <div id="newAddressSection" class="border rounded p-3 mb-3 mt-2">
+                <h5 class="h6 text-primary mb-2">Địa chỉ mới</h5>
+
+                <div class="mb-2">
+                  <label class="form-label">Số nhà / Đường</label>
+                  <input
+                    type="text"
+                    name="new_addressLine"
+                    class="form-control"
+                    placeholder="Ví dụ: 123 Nguyễn Trãi"
+                    required
+                  >
+                </div>
+
+                <div class="row">
+                  <div class="col-md-4 mb-2">
+                    <label class="form-label">Tỉnh / Thành phố</label>
+                    <select id="province" name="new_province" class="form-select" required>
+                      <option value="">-- Chọn tỉnh / thành --</option>
+                    </select>
+                  </div>
+
+                  <div class="col-md-4 mb-2">
+                    <label class="form-label">Quận / Huyện</label>
+                    <select id="district" name="new_district" class="form-select" required>
+                      <option value="">-- Chọn quận / huyện --</option>
+                    </select>
+                  </div>
+
+                  <div class="col-md-4 mb-2">
+                    <label class="form-label">Phường / Xã</label>
+                    <select id="ward" name="new_ward" class="form-select" required>
+                      <option value="">-- Chọn phường / xã --</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             <% } %>
@@ -112,6 +155,221 @@
               </button>
             </div>
           </form>
+
+          <!-- MODAL: ĐỊA CHỈ ĐÃ LƯU -->
+          <div class="modal fade" id="savedAddressModal" tabindex="-1" aria-labelledby="savedAddressModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="savedAddressModalLabel">Địa chỉ giao hàng đã lưu</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+
+                <div class="modal-body">
+                  <%
+                    const canAddMore = addrList.length < 5;
+                  %>
+
+                  <% if (canAddMore) { %>
+                    <button
+                      class="btn btn-sm btn-outline-primary mb-3"
+                      type="button"
+                      data-bs-toggle="collapse"
+                      data-bs-target="#modalAddAddress"
+                      aria-expanded="false"
+                      aria-controls="modalAddAddress">
+                      + Thêm địa chỉ mới
+                    </button>
+
+                    <div class="collapse mb-3" id="modalAddAddress">
+                      <form method="post" action="/checkout/address/add">
+                        <div class="row g-2">
+                          <div class="col-md-6">
+                            <input
+                              name="fullName"
+                              class="form-control form-control-sm"
+                              placeholder="Họ tên"
+                              value="<%= user ? user.fullName : '' %>"
+                              required>
+                          </div>
+                          <div class="col-md-6">
+                            <input
+                              name="phone"
+                              class="form-control form-control-sm"
+                              placeholder="Số điện thoại"
+                              value="<%= user && user.phone ? user.phone : '' %>">
+                          </div>
+                          <div class="col-12 mt-1">
+                            <input
+                              name="addressLine"
+                              class="form-control form-control-sm"
+                              placeholder="Số nhà / Đường"
+                              required>
+                          </div>
+
+                          <div class="col-md-4">
+                            <select id="modal_province" name="province" class="form-select form-select-sm" required>
+                              <option value="">-- Tỉnh / Thành phố --</option>
+                            </select>
+                          </div>
+                          <div class="col-md-4">
+                            <select id="modal_district" name="district" class="form-select form-select-sm" required>
+                              <option value="">-- Quận / Huyện --</option>
+                            </select>
+                          </div>
+                          <div class="col-md-4">
+                            <select id="modal_ward" name="ward" class="form-select form-select-sm" required>
+                              <option value="">-- Phường / Xã --</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div class="form-check mt-2">
+                          <input
+                            class="form-check-input"
+                            type="checkbox"
+                            name="isDefault"
+                            id="modal_isDefault">
+                          <label class="form-check-label small" for="modal_isDefault">
+                            Đặt làm địa chỉ mặc định
+                          </label>
+                        </div>
+
+                        <div class="mt-2 d-flex justify-content-end">
+                          <button type="submit" class="btn btn-sm btn-primary">Lưu địa chỉ</button>
+                        </div>
+                      </form>
+                    </div>
+                  <% } else { %>
+                    <p class="text-muted">Bạn đã lưu tối đa 5 địa chỉ giao hàng. Hãy xoá bớt nếu muốn thêm địa chỉ mới.</p>
+                  <% } %>
+
+                  <% if (addrList.length === 0) { %>
+                    <p class="text-muted mb-0">Bạn chưa có địa chỉ nào.</p>
+                  <% } else { %>
+                    <% addrList.forEach((addr, index) => { %>
+                      <div class="border rounded p-2 mb-3">
+                        <div class="d-flex justify-content-between">
+                          <div>
+                            <strong><%= addr.fullName || user.fullName %></strong>
+                            <% if (addr.phone) { %>
+                              <span class="text-muted"> - <%= addr.phone %></span>
+                            <% } %>
+                            <div class="small mt-1">
+                              <%= addr.addressLine %>, <%= addr.ward %>, <%= addr.district %>, <%= addr.province %>
+                            </div>
+                            <% if (addr.isDefault) { %>
+                              <span class="badge bg-success mt-1">Mặc định</span>
+                            <% } %>
+                          </div>
+                          <div class="text-end">
+                            <button
+                              class="btn btn-link btn-sm p-0 me-2"
+                              type="button"
+                              data-bs-toggle="collapse"
+                              data-bs-target="#addr-edit-<%= index %>"
+                              aria-expanded="false"
+                              aria-controls="addr-edit-<%= index %>">
+                              Sửa
+                            </button>
+
+                            <form
+                              method="post"
+                              action="/checkout/address/<%= index %>/delete"
+                              class="d-inline"
+                              onsubmit="return confirm('Bạn chắc chắn muốn xóa địa chỉ này?');">
+                              <button type="submit" class="btn btn-link btn-sm text-danger p-0">
+                                Xóa
+                              </button>
+                            </form>
+                          </div>
+                        </div>
+
+                        <div class="collapse mt-2" id="addr-edit-<%= index %>">
+                          <form method="post" action="/checkout/address/<%= index %>/edit">
+                            <div class="row g-2">
+                              <div class="col-md-6">
+                                <input
+                                  type="text"
+                                  name="fullName"
+                                  class="form-control form-control-sm"
+                                  placeholder="Họ tên"
+                                  value="<%= addr.fullName || user.fullName %>">
+                              </div>
+                              <div class="col-md-6">
+                                <input
+                                  type="text"
+                                  name="phone"
+                                  class="form-control form-control-sm"
+                                  placeholder="Số điện thoại"
+                                  value="<%= addr.phone || '' %>">
+                              </div>
+                              <div class="col-12 mt-1">
+                                <input
+                                  type="text"
+                                  name="addressLine"
+                                  class="form-control form-control-sm mb-1"
+                                  placeholder="Số nhà / Đường"
+                                  value="<%= addr.addressLine %>">
+                              </div>
+                              <div class="col-md-4">
+                                <input
+                                  type="text"
+                                  name="ward"
+                                  class="form-control form-control-sm"
+                                  placeholder="Phường / Xã"
+                                  value="<%= addr.ward %>">
+                              </div>
+                              <div class="col-md-4">
+                                <input
+                                  type="text"
+                                  name="district"
+                                  class="form-control form-control-sm"
+                                  placeholder="Quận / Huyện"
+                                  value="<%= addr.district %>">
+                              </div>
+                              <div class="col-md-4">
+                                <input
+                                  type="text"
+                                  name="province"
+                                  class="form-control form-control-sm"
+                                  placeholder="Tỉnh / Thành phố"
+                                  value="<%= addr.province %>">
+                              </div>
+                            </div>
+
+                            <div class="form-check mt-2">
+                              <input
+                                class="form-check-input"
+                                type="checkbox"
+                                name="isDefault"
+                                id="isDefault-<%= index %>"
+                                <%= addr.isDefault ? 'checked' : '' %>>
+                              <label class="form-check-label small" for="isDefault-<%= index %>">
+                                Đặt làm địa chỉ mặc định
+                              </label>
+                            </div>
+
+                            <div class="mt-2 d-flex justify-content-end">
+                              <button type="submit" class="btn btn-sm btn-primary">
+                                Lưu địa chỉ
+                              </button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    <% }) %>
+                  <% } %>
+                </div>
+
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                    Đóng
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -298,6 +556,174 @@ document.addEventListener('DOMContentLoaded', function () {
 
   updateSummary();
 });
+
+
+// Ẩn/hiện form địa chỉ mới
+const shippingSelect = document.getElementById("shippingAddressSelect");
+const newAddressSec = document.getElementById("newAddressSection");
+
+if (shippingSelect && newAddressSec) {
+  shippingSelect.addEventListener("change", function () {
+    if (this.value === "new") {
+      newAddressSec.style.display = "block";
+    } else {
+      newAddressSec.style.display = "none";
+    }
+  });
+
+  if (shippingSelect.value === "new") {
+    newAddressSec.style.display = "block";
+  }
+}
+
+// LOAD DỮ LIỆU TỈNH HUYỆN XÃ
+let dataVN = {};
+
+fetch('/data/vietnam.json')
+  .then(res => res.json())
+  .then(data => {
+    dataVN = data;
+    fillProvinceSelect('province');       
+    fillProvinceSelect('modal_province');
+  });
+
+function fillProvinceSelect(selectId) {
+  const provinceSelect = document.getElementById(selectId);
+  if (!provinceSelect) return;
+  provinceSelect.innerHTML = `<option value="">-- Chọn tỉnh --</option>`;
+
+  Object.entries(dataVN).forEach(([code, item]) => {
+    const opt = document.createElement('option');
+    opt.value = item.name;
+    opt.dataset.code = code;
+    opt.textContent = item.name;
+    provinceSelect.appendChild(opt);
+  });
+}
+
+function fillDistrictSelect(provinceCode, districtId, wardIdToClear) {
+  const districtSelect = document.getElementById(districtId);
+  if (!districtSelect) return;
+
+  districtSelect.innerHTML = `<option value="">-- Chọn huyện --</option>`;
+  if (wardIdToClear) {
+    const wardSelect = document.getElementById(wardIdToClear);
+    if (wardSelect) {
+      wardSelect.innerHTML = `<option value="">-- Chọn xã --</option>`;
+    }
+  }
+
+  if (!provinceCode || !dataVN[provinceCode]) return;
+
+  const dList = dataVN[provinceCode].districts;
+  Object.entries(dList).forEach(([dCode, dVal]) => {
+    const opt = document.createElement('option');
+    opt.value = dVal.name;
+    opt.dataset.code = dCode;
+    opt.textContent = dVal.name;
+    districtSelect.appendChild(opt);
+  });
+}
+
+function fillWardSelect(provinceCode, districtCode, wardId) {
+  const wardEl = document.getElementById(wardId);
+  if (!wardEl) return;
+  wardEl.innerHTML = `<option value="">-- Chọn xã --</option>`;
+
+  if (!provinceCode || !districtCode) return;
+  const province = dataVN[provinceCode];
+  if (!province) return;
+  const district = province.districts[districtCode];
+  if (!district) return;
+
+  const wList = district.wards;
+  wList.forEach(w => {
+    const label = (typeof w === 'string')
+      ? w
+      : (w.name || w.full_name || w.path || JSON.stringify(w));
+
+    const opt = document.createElement('option');
+    opt.value = label;
+    opt.textContent = label;
+    wardEl.appendChild(opt);
+  });
+}
+
+function toggleEditForm(index) {
+  const form = document.getElementById(`edit-form-${index}`);
+  if (!form) return;
+  form.style.display = (form.style.display === 'none' || !form.style.display)
+    ? 'block'
+    : 'none';
+}
+
+document.querySelectorAll('.btn-edit-address').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const index = this.dataset.index;
+      toggleEditForm(index);
+    });
+  });
+
+  const provinceMain = document.getElementById('province');
+const districtMain = document.getElementById('district');
+const wardMain = document.getElementById('ward');
+
+if (provinceMain) {
+  provinceMain.addEventListener('change', function () {
+    const code = this.options[this.selectedIndex].dataset.code;
+    fillDistrictSelect(code, 'district', 'ward');
+  });
+}
+
+if (districtMain && provinceMain) {
+  districtMain.addEventListener('change', function () {
+    const provinceCode = provinceMain.options[provinceMain.selectedIndex].dataset.code;
+    const districtCode = this.options[this.selectedIndex].dataset.code;
+    fillWardSelect(provinceCode, districtCode, 'ward');
+  });
+}
+
+const modalProvince = document.getElementById('modal_province');
+const modalDistrict = document.getElementById('modal_district');
+const modalWard = document.getElementById('modal_ward');
+
+if (modalProvince) {
+  modalProvince.addEventListener('change', function () {
+    const code = this.options[this.selectedIndex].dataset.code;
+    fillDistrictSelect(code, 'modal_district', 'modal_ward');
+  });
+}
+
+if (modalDistrict && modalProvince) {
+  modalDistrict.addEventListener('change', function () {
+    const provinceCode = modalProvince.options[modalProvince.selectedIndex].dataset.code;
+    const districtCode = this.options[this.selectedIndex].dataset.code;
+    fillWardSelect(provinceCode, districtCode, 'modal_ward');
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('checkoutForm');
+    if (!form) return;
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    form.addEventListener('submit', function (e) {
+      const ok = window.confirm(
+        'Bạn xác nhận đặt hàng với thông tin hiện tại?'
+      );
+      if (!ok) {
+        e.preventDefault();
+        return;
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Đang xử lý...';
+      }
+    });
+  });
+
 </script>
 
 <%- include('../partials/footer') %>

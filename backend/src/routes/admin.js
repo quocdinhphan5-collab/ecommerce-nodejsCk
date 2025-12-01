@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { ensureAdmin } = require('../middleware/auth');
 const adminController = require('../controllers/adminController');
+const categoryController = require('../controllers/categoryController');
 
 // tất cả route bên dưới đều yêu cầu admin
 router.use(ensureAdmin);
@@ -31,5 +32,10 @@ router.get('/users', adminController.listUsers);
 router.get('/users/:id/edit', adminController.getUserEditForm);
 router.post('/users/:id/update', adminController.updateUser);
 router.post('/users/:id/toggle-active', adminController.toggleUserActive);
+
+// Danh mục
+router.get('/categories', categoryController.listCategories);
+router.post('/categories', categoryController.createCategory);
+router.post('/categories/:id/delete', categoryController.deleteCategory);
 
 module.exports = router;

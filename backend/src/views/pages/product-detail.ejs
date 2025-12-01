@@ -82,29 +82,42 @@
             <% } %>
           </div>
 
-          <!-- Giá -->
-          <p class="fs-4 fw-bold text-danger mb-2">
-            <%= product.price.toLocaleString('vi-VN') %> ₫
+          <!-- Giá: lấy theo biến thể đầu tiên nếu có, ngược lại dùng product.price -->
+          <%
+            let initialPrice = product.price;
+            if (product.variants && product.variants.length > 0) {
+              initialPrice = product.variants[0].price;
+            }
+          %>
+          <p id="productPriceDisplay" class="fs-4 fw-bold text-danger mb-2">
+            <%= (initialPrice || 0).toLocaleString('vi-VN') %> ₫
           </p>
 
-          <!-- Chọn phiên bản -->
-          <% if (product.variants && product.variants.length) { %>
-            <div class="mb-3">
-              <label class="form-label">Chọn phiên bản</label>
-              <select id="variantSelect" class="form-select">
-                <% product.variants.forEach((v, idx) => { %>
-                  <option value="<%= idx %>">
-                    <%= v.name %> - <%= v.price.toLocaleString('vi-VN') %> ₫ (Tồn kho: <%= v.stock %>)
-                  </option>
-                <% }) %>
-              </select>
-            </div>
-          <% } %>
-
-          <!-- Thêm vào giỏ -->
+          <!-- FORM THÊM VÀO GIỎ (GỒM CHỌN BIẾN THỂ + SỐ LƯỢNG) -->
           <form id="addToCartForm" method="post" action="/cart/add" class="mb-2">
             <input type="hidden" name="productId" value="<%= product._id %>">
-            <input type="hidden" name="variantIndex" id="variantIndexInput" value="">
+
+            <% if (product.variants && product.variants.length) { %>
+              <div class="mb-3">
+                <label class="form-label">Chọn phiên bản</label>
+                <select
+                  id="variantSelect"
+                  name="variantIndex"
+                  class="form-select"
+                  required
+                >
+                  <% product.variants.forEach((v, idx) => { %>
+                    <option
+                      value="<%= idx %>"
+                      <%= idx === 0 ? 'selected' : '' %>
+                      data-price="<%= v.price %>"
+                    >
+                      <%= v.name %> - <%= v.price.toLocaleString('vi-VN') %> ₫ (Tồn kho: <%= v.stock %>)
+                    </option>
+                  <% }) %>
+                </select>
+              </div>
+            <% } %>
 
             <label class="form-label">Số lượng</label>
             <div class="input-group" style="max-width: 260px;">
@@ -121,6 +134,7 @@
               </button>
             </div>
           </form>
+
           <div id="addCartAlert" class="alert d-none mt-2"></div>
 
           <!-- Mô tả sản phẩm -->
@@ -235,16 +249,23 @@
 </script>
 
 <script>
-  // Đồng bộ variant chọn với hidden input
+  // Đổi giá hiển thị theo biến thể
   (function () {
-    const variantSelect = document.getElementById('variantSelect');
-    const hiddenVariant = document.getElementById('variantIndexInput');
-    if (variantSelect && hiddenVariant) {
-      hiddenVariant.value = variantSelect.value;
-      variantSelect.addEventListener('change', () => {
-        hiddenVariant.value = variantSelect.value;
-      });
-    }
+    const select = document.getElementById('variantSelect');
+    const priceEl = document.getElementById('productPriceDisplay');
+    if (!select || !priceEl) return;
+
+    const updatePrice = () => {
+      const opt = select.options[select.selectedIndex];
+      const price = Number(opt.getAttribute('data-price'));
+      if (!isNaN(price)) {
+        priceEl.textContent = price.toLocaleString('vi-VN') + ' ₫';
+      }
+    };
+
+    // cập nhật lần đầu theo biến thể đầu tiên
+    updatePrice();
+    select.addEventListener('change', updatePrice);
   })();
 
   // AJAX thêm vào giỏ hàng

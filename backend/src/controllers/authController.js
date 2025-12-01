@@ -159,13 +159,13 @@ async function postForgotPassword(req, res) {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
     user.resetCode = code;
-    user.resetCodeExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 phút
+    user.resetCodeExpires = new Date(Date.now() + 2 * 60 * 1000);
     await user.save();
 
     await sendMail(
       user.email,
-      'Mã đặt lại mật khẩu Máy Tính Store',
-      `Mã xác nhận đặt lại mật khẩu của bạn là: ${code}\nMã có hiệu lực trong 15 phút.`
+      'OTP đặt lại mật khẩu Máy Tính Store',
+      `Vui lòng không chia sẽ mã này cho bất kỳ ai\nMã OTP đặt lại mật khẩu của bạn là: ${code}\nMã có hiệu lực trong 2 phút.`
     );
 
     // Chuyển sang trang nhập OTP
@@ -250,7 +250,7 @@ async function postResendOtp(req, res) {
     await sendMail(
       user.email,
       'Mã đặt lại mật khẩu Máy Tính Store (gửi lại)',
-      `Mã xác nhận đặt lại mật khẩu của bạn là: ${code}\nMã có hiệu lực trong 15 phút.`
+      `Mã xác nhận đặt lại mật khẩu của bạn là: ${code}\nMã có hiệu lực trong 2 phút.`
     );
 
     return res.render('auth/reset-otp', {
